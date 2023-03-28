@@ -1,0 +1,401 @@
+---
+title: "Introduccion a R_2"
+author: "Lic. Gomez Aguirre"
+date: '2023-03-12'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Vectores
+
+Para generar un vector utilizamos el comando ```c()```.
+
+```{r}
+ejvector <- c(1, 3, 4)
+ejvector
+```
+
+Podemos realizar diferentes operaciones sobre ese vector
+
+```{r}
+ejvector * 2
+```
+Utilizando los dos puntos ```:``` indicamos a R que vaya de un valor al otro, sirve para generar un vector por ejemplo.
+
+```{r}
+ejvector2 <- c(1:5)
+```
+
+Podemos crear un vector que contenga diferentes ```strings```
+```{r}
+utiles <- c("Lapicera", "Lápiz", "Goma de borrar")
+utiles
+```
+
+Si intentamos crear vector que contenga diferentes tipos de valores, R va a forzar a que sean de un mismo tipo
+```{r}
+a <- c(1, "asd", 3)
+a
+class(a[1])
+```
+
+Para acceder a algún elemento del vector, podemos buscarlo por su número de orden que funciona como su número de índice, entre ```[ ]```. En R, los índices comienzan con 1 (a diferencia de la mayoría de los lenguajes de programación, donde empiezan con el 0)
+
+```{r}
+utiles[3]
+```
+
+Este valor lo podemos almacenar en un objeto nuevo, y se va a almacenar solamente este valor
+
+```{r}
+ultimoutil <- utiles[3]
+ultimoutil
+```
+
+También podemos usar la posición en ese vector para reemplazar el valor
+
+```{r}
+utiles[3] <- "sacapuntas" 
+utiles
+```
+Hay varias funciones que nos permiten generar vectores. Por ejemplo, ```rep()``` genera repeticiones con ciertos parámetros que son ```èach``` para indicar el N de repeticiones y ```length``` para indicar el largo del vector. Sin ```length````, cada valor del vector se repite la cantidad N de veces indicada 1 sola vez para cada valor. También funciona para valores numéricos.
+
+```{r}
+colores <- rep(c("verde", "rojo"), each=4, length=18)
+colores
+```
+Por otra parte, ```seq()``` es exclusivamente para generar una secuencia de valores numéricos con un cierto patrón. El argumento opcional ```"by"``` indica de cuánto son los saltos. Sin este argumento, pasa de 1 a 1.
+
+```{r}
+seq(1,10, by=3)
+```
+
+### Data Frames
+
+Un Data Frame es una tabla de datos, donde las columnas representan variables y las filas observaciones/registros
+
+Seguramente resulte central en nuestro proceso de trabajo, ya que muchos de los datos que vamos a lidiar son tabulares y permiten diferentes operaciones, modelos y funciones muy diversas.
+
+Al igual que un vector se puede entender como una concatenación de valores, se puede entender a un dataframe como una combinación de N vectores del mismo tamaño. Por ejemplo, tomamos como ejemplo los [Garajes de CABA](https://data.buenosaires.gob.ar/dataset/garajes-comerciales)
+
+#https://cdn.buenosaires.gob.ar/datosabiertos/datasets/transporte-y-obras-publicas/garajes-comerciales/garajes-comerciales.csv
+
+```{r}
+SMP  <- c("047-106-028","033-044-012", "033-056C-023A", "033-012-031", "033-023-032")
+CALLENOMBRE  <-  c("ARENAL, CONCEPCION","BONPLAND","CORDOBA",
+                   "RAMIREZ DE VELAZCO, JUAN","BONPLAND")
+CALLEALTURA  <-  c(4519, 1147, 5640, 1418, 966)
+garajes <- data.frame(SMP, CALLENOMBRE, CALLEALTURA)
+garajes
+```
+
+Al igual que en un __vector__ se accede a los elementos con ```[ ]```, en un __dataframe__ se accede a sus elementos de la forma __```[fila, columna]```__.
+
+Otra opción es especificar la columna, mediante el operador ```$```, y luego seleccionar el registro deseado.
+
+```{r}
+garajes$CALLEALTURA
+garajes[4,2]
+garajes$CALLEALTURA[4]
+```
+Si ya estamos llamando a una variable con el operador ```$```, debemos sólo acceder a la posición del registro que estamos buscando.
+
+Acceder a los __dataframes__ mediante  ```[ ]``` puede utilizarse para realizar filtros sobre la base, poniendo una condición para las filas. Por ejemplo, puedo utilizar los  ```[ ]``` para conservar del __dataframe__ ```garajes ```  unicamente los registros de la calle Bonpland:
+
+```{r error=TRUE}
+garajes[garajes$CALLENOMBRE=="BONPLAND",]
+```
+Como vimos anteriormente, puedo usar este filtro y guardar la información en un nuevo objeto.
+
+### Listas
+
+Concatenan objetos de cualquier índole, sean dataframes, vectores, valores, otras listas y más.
+
+```{r}
+lista <- list(1, utiles, DF = garajes, CALLEALTURA, c(1,2,3))
+lista
+```
+
+Para acceder un elemento de una lista, podemos utilizar los corchetes. podemos utilizar el operador __```$```__, que se puede usar a su vez de forma iterativa. 
+
+```{r}
+lista
+lista$DF$CALLENOMBRE
+lista[5]
+```
+### Matrices
+
+Las matrices son estructuras bidimensionales (como los dataframe), donde los valores son del mismo tipo (como en los vectores). Son útiles ya que, al igual que con las listas, muchas funciones o modelos de R devuelven matrices o las toman como argumento. Se generaon con ```matrix()```, con los argumentos de la data a pasarle, la cantidad de filas y columnas y el parámetro ````byrow``` que indica si la matriz se completa por las filas o por las columnas (por default es ```TRUE```, es decir se llena por filas).
+
+```{r}
+matrix (1:8, nrow=2, ncol=4, byrow = TRUE)
+```
+
+## Algunas operaciones con matrices
+
+# Suma y resta
+
+```{r}
+A <- matrix(c(10, 8,
+              5, 12), ncol = 2, byrow = TRUE)
+A
+```
+
+```{r}
+B <- matrix(c(5, 3,
+              15, 6), ncol = 2, byrow = TRUE)
+B
+```
+
+#Estas matrices tienen ambas las mismas dimensiones. Puedes comprobar las dimensiones (número de filas y columnas, respectivamente) de una matriz con la función dim.
+
+```{r}
+dim(A)
+```
+
+```{r}
+C= A+B
+C
+```
+
+## Trasponer una matriz
+
+```{r}
+t(A)
+```
+
+## Multiplicacion de matrices
+
+Para multiplicar o dividir una matriz por un escalar tienes que hacer uso de los operadores * o /, respectivamente:
+
+```{r}
+2*A
+```
+
+## Multiplicación elemento a elemento
+
+La multiplicación de dos matrices de la misma dimensión elemento también se puede calcular con el operador *. La salida será una matriz de las mismas dimensiones que las matrices originales.
+
+```{r}
+A*B
+```
+
+## Producto matricial
+
+En R, la multiplicación matricial se puede realizar con el operador %*%.
+
+```{r}
+A %*% B
+```
+
+## Potencia de una matriz en R
+
+No existe una función en R base para calcular la potencia de una matriz, por lo que propondremos dos alternativas diferentes.
+
+```{r}
+# install.packages("expm")
+library(expm)    
+
+A %^% 2
+```
+
+# Determinante de una matriz en R
+
+```{r}
+det(A)
+```
+
+# Inversa de una matriz en R
+
+Para calcular la inversa de una matriz en R puedes hacer uso de la función solve.
+
+```{r}
+M <- solve(A)
+M
+```
+# Autovalores y autovectores en R
+
+Tanto los autovalores como los autovectores de una matriz se pueden calcular en R con la función eigen
+
+Por un lado, los autovalores se almacenan en el elemento values de la lista que devuelve la función. Los autovalores se mostrarán en orden decreciente:
+
+```{r}
+eigen(A)$values
+```
+
+# Descomposición singular, QR y de Cholesky en R
+
+Primero, la descomposición en valores singulares, descomposición singular o SVD, por sus siglas en inglés, se puede calcular con la función svd.
+
+```{r}
+svd(A)
+```
+
+### Uso de ciertos caracteres en R
+
+- R distingue entre minúsculas y mayúsculas
+- El numeral ```#``` se utiliza para hacer comentarios, todo lo que vaya después del mismo no es "leído" por R. Se debe utilizar por línea que se quiera comentar.
+- Como vimos anteriormente, los corchetes se utilizan para acceder a los elementos.
+- También vimos que ```$``` es una forma de acceso, en los dataframes para acceder a las columnas pero tiene otros casos de uso también.
+- Los paréntesis ```()``` engloban los parámetros de la función a la que estamos llamando
+- Las comas ```,``` separan parámetros de una función.
+
+### Instalar librerías
+Hasta ahora, hemos trabajado con lo que se llama ```R Base```, es decir las funciones que R contiene como base, pero gran parte de su riqueza está en las librerías que crean sus usuarios.
+
+Se instalan con el comando ```install.packages()```, cuyo parámetro es el nombre de la librería entre paréntesis. También se puede pasar un vector de nombres de librerías para instalar varias a la vez.
+
+Cada vez que se inicia una sesión en R, se debe llamar a las librerías que deseamos usar con el parámetro ```library()```
+
+Vamos a instalar algunas librerías que utilizaremos:
+```{r}
+#install.packages(c("tidyverse", "data.table", "openxlsx", "readxl", "xlsx", "ggthemes"),repos = "http://cran.us.r-project.org")
+```
+
+### Lectura/escrituras de archivos -- CSV/TXT
+Vamos a empezar viendo cómo levantar archivos en los formatos de datos tabulares más clásicos: csv, txt y excel.
+
+Hay muchas funciones para levantar csv o txt, sobre todo cambian: el delimitador, el encabezado y el separador decimal.
+
+Vamos a utilizar la función ```read.csv``` (pero podría ser ```read.table```, ```fread```, ```read.delim```, en general cambian sus parámetros default, hay algunas más óptimas que otras, aunque por ejemplo ```fread()``` no es de R Base). Le estamos pasando como parámetro de ubicación una URL (generada por el portal de datos de CABA), pero puede ser la ubicación de un archivo en la pc local (línea de código comentada) 
+
+```{r}
+radares <- read.csv("http://cdn.buenosaires.gob.ar/datosabiertos/datasets/flujo-vehicular-por-radares-ausa/flujo-vehicular-por-radares-2019.csv", header=TRUE, sep=',', dec='.')
+head(radares)
+#radares <- read.csv("C:/Users/rama_/Desktop/Ramiro/Transito radares ausa/flujo-vehicular-por-radares-2019.csv", header=TRUE, sep=',', dec='.')
+# si esta en mi directorio de trabajo, directamente:
+#radares <- read.csv("flujo-vehicular-por-radares-2019.csv", header=TRUE, sep=',', dec='.')
+#probamos levantar un archivo .txt
+indicadoresmoc <- read.csv("http://cdn.buenosaires.gob.ar/datosabiertos/datasets/mapa-de-oportunidades-comerciales-moc/COMERCIOS.TXT", sep='\t')
+```
+
+Una vez que tenemos cargado un dataframe (````radares``` en este caso), podemos aplicar varias funciones para explorarlo.
+
+Podemos "imprimir" (deriva de la función ```print```) sus primeros o sus últimos registros
+```{r}
+head(radares)
+tail(radares)
+
+```
+Podemos ver un resumen de sus variables
+```{r}
+summary(radares)
+```
+Los nombres de sus columnas (también se puede usar ```names```, ```colnames``` aplica para matrices también, aunque names aplica para vectores)
+```{r}
+colnames(radares)
+```
+Cantidad de filas y cantidad de columnas. ```length``` también es muy utilizado, ya que aplica para otros tipos de objetos.
+```{r}
+nrow(radares)
+ncol(radares)
+length(radares)
+```
+La función ```unique()``` nos devuelve un vector con valores únicos desduplicados.
+```{r}
+unique(radares$autopista_nombre)
+```
+La función ```table()``` devuelve una tabla de frecuencias absolutas con la cantidad de registros por categoría para la variable.
+```{r}
+tabla <- table(radares$autopista_nombre)
+tabla
+```
+Con ```prop.table```
+```{r}
+prop.table(tabla)
+```
+Puedo hacer una tabla bi-variada también
+```{r}
+table(radares$autopista_nombre, radares$seccion_sentido)
+```
+Obtener la media
+```{r}
+mean(radares$cantidad, na.rm = TRUE)
+```
+Sumar una columna numérica
+```{r}
+sum(radares$cantidad)
+```
+Subsetear el dataframe filtrandolo!
+```{r}
+radareslugonesydelle <- subset(radares, (radares$autopista_nombre=='AU 4  Lugones')|(radares$autopista_nombre=='AU Dellepiane'))
+head(radareslugonesydelle)
+```
+Puedo guardar este objeto en mi PC local con ```write.csv()``` con los parámetros: objeto a guardar, nombre (y ubicación, aquí por default se me guardará en mi directorio predeterminado) y la última opción evita que R guarde el índice de las filas
+```{r}
+write.csv(radareslugonesydelle, "radares-lugones-y-dellepiane.csv", row.names = FALSE)
+```
+Para remover un objeto del ambiente, usamos
+```{r}
+rm(radares)
+```
+Para remover todos los objeto del ambiente, usamos
+```{r}
+rm(list=ls())
+```
+
+### Otras funciones
+Vamos a ver dos funciones básicas que seguramente utilicemos. ```paste()``` para concatener serie de caracteres (u objetos que los almacenen) y ```print()``` que imprime lo que le indiquemos.
+```{r}
+paste("Armamos", "una", "frase", sep= " ")
+frasearmada <- paste("Armamos", "una", "frase", sep= " ")
+print (frasearmada)
+```
+
+### Lectura/escrituras de archivos -- Excel
+Para leer y escribir archivos en excel, también hay varias funciones. A diferencia de csv y txt (son formatos libres y abiertos) pueden ser tanto la librería ```openxlsx```, ```readxl``` o ```xlsx```. Ahora levantaremos un archivo con formato ```.xlsx```, que es el formato abierto basado en XML (similar a HTML) que se usa en muchos archivos excel. También los archivos excel pueden estar en ```.xls```, que es formato propietario de MS Office (Excel).
+```{r, echo=FALSE}
+#install.packages("readxl")
+library("readxl")
+Cementerios <- read.csv("https://cdn.buenosaires.gob.ar/datosabiertos/datasets/atencion-ciudadana/cementerios-publicos/ingresos_cementerios_publicos.csv")
+#para grabar, paso los parametros de: nombre de objeto, nombre del archivo qeu voy a guardar (y su ruta en nuestra PC), y el parámetro row.names que ya vimos
+write.csv(Cementerios, "Cementerios_CABA.xlsx", row.names=FALSE)
+```
+### Formatos
+Hasta el momento vimos los formatos ```.xlsx```, ```.xls```, ```.csv``` y ```.txt```. Otros muy populares son:
+
+* json
+* xml
+* geojson
+* kml
+* shp
+* ods
+### Ambiente de trabajo
+
+- Directorio de trabajo. Se obtiene el actual con la función `getwd()`, es *hacia donde apunta el código*, es decir a donde lee los archivos o donde graba los archivos por default. Para setear otro directorio de trabajo, se debe utiliza la función ```setwd()```
+- Ambiente: Muestra los plots, nos permite navegar por nuestros directorios, guarda la información de valores y de datos cargados, muestra las librerías instaladas como cargadas y también tiene un display de ayuda, que se accede antecediendo el símbolo ```?``` antes del nombre de una función y al ejecutar esa línea nos lleva a la documentación oficial de la función. 
+
+Algunas aclaraciones:
+
+1. El directorio queda referido a un lugar específico en nuestra computadora local. Si compartimos el script con otro, si cambiamos de pc, si cambiamos la carpeta de lugar u otras operaciones que afecten a esa ruta, las operaciones que impliquen la misma se rompe.
+2. El ambiente muestra resultados de diferentes trabajos, no indica qué script lo generó. Esto se puede evitar utilizado proyectos (archivos .Rproj), que generan un ambiente específico para cada proyecto e implica toda una carpeta de trabajo
+
+Rstudio tiene una herramienta muy útil de trabajo que son los **proyectos**. Estos permiten mantener un ambiente de trabajo delimitado por cada uno de nuestros trabajos.
+
+### Tipos de archivos de R
+
+- __Script__: Es un archivo de texto plano, donde podemos poner el código que utilizamos para preservarlo
+- __Rnotebook__: También sirve para guardar el código, pero a diferencia de los scripts, se puede compilar (y exportar en diferentes formatos), e intercalar código con resultados (esto es un rnotebook)
+- __Rproject__: Es un archivo que define la metadata del proyecto y nos permite tener ambientes "independientes"
+- __RDS y Rdata__: Dos formatos de archivos propios de R para guardar datos. Sirven para cargar data rápidamente. 
+
+### Lecturas recomendadas
+
+* [Tidy Data - Hadley Wickham](https://vita.had.co.nz/papers/tidy-data.pdf) Uno de los principales impulsores de R, en este paper explica lo que se considera "Tidy Data"
+* [Data Science Livebook - Pablo Casas](https://livebook.datascienceheroes.com/)
+* [Cookbook for R](http://www.cookbook-r.com/) Muchas soluciones a algunos problemas básicos de R
+* Cheatsheets! Por ejemplo, [Data Science Cheatsheet](https://github.com/ml874/Data-Science-Cheatsheet) o [R Cheatsheet](https://www.rstudio.com/resources/cheatsheets/)
+
+### Algunos ejercicios
+
+
+* Probar levantar archivos excel, csv y txt desde datos abiertos de la ciudad de Buenos Aires
+* Probar las funciones que vimos en la clase.
+* Grabar archivos en excel y csv.
+
+
+
+

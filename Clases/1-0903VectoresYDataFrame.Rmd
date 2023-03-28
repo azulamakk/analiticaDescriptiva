@@ -1,0 +1,146 @@
+---
+title: "Ejercicios Herramienta Analitica"
+author: "Lic. Maximiliano Gomez Aguirre & Lic. Lucas Enrich"
+output: html_document
+---
+#### Vectores
+
+a) ¿Cuanto es 1+2+...+10,000?
+
+b) Dividir el vector correspondiente a la columna Sepal.Length por Sepal.Width y asignarlo a una variable
+
+c) Obtener la secuencia de numeros impares de 10mil a 100mil y asignarlo a una variable
+
+d) ¿Cual es el resultado de multiplicar 50*TRUE?¿Por que?
+
+e) ¿Cual es el resultado de lenght("hola") y nchar("hola")? ¿Son iguales? ¿Por que?
+
+f) Explique el output de esta operacion de vectores:
+
+c(2,4,5,6)*c(2,4)
+
+#### Data Frames:
+a) Cargar el dataframe _Covid19VacunasAgrupadas_ en memoria.
+b) ¿Cuantas columnas tiene? ¿De que tipo son?
+c) Cree una variable (columna nueva) que muestre el ratio de _primera_dosis_cantidad_ por cada _segunda_dosis_cantidad_
+d) ¿Cuantas _primera_dosis_cantidad_ se aplicaron por cada _segunda_dosis_cantidad_? (Total)
+
+
+
+
+#### A) Dada la base de datos __mtcars__:
+
+Columnas
+
+  1) 	mpg 	Miles/(US) gallon
+  2) 	cyl 	Number of cylinders
+  3) 	disp 	Displacement (cu.in.)
+  4) 	hp 	Gross horsepower
+  5) 	drat 	Rear axle ratio
+  6) 	wt 	Weight (1000 lbs)
+  7) 	qsec 	1/4 mile time
+  8) 	vs 	Engine (0 = V-shaped, 1 = straight)
+  9) 	am 	Transmission (0 = automatic, 1 = manual)
+  10) 	gear 	Number of forward gears
+  11) 	carb 	Number of carburetors 
+
+
+__Consignas:__
+
+1) Dado que:
+
+    *1 galon = 4.54609 litros*
+    *1 milla = 1.60934*
+    
+    Crear una variable nueva que se llame "km.por.litro"
+
+
+2) ¿Cual es el qsec promedio por cyl? ¿en total?
+
+3) Filtrar por los caballos de fuerza (hp) entre 250 y 300
+
+4) Cual es el auto más pesado (wt)?El mas liviano? Cual es el promedio y la mediana?
+
+5) Armar una funcion que transforme libras a kilos 
+
+    *1 libra = 0.453592 kg*
+    *1 kg = 2.20462 libra*
+    
+    
+
+#### B) De los primeros $1000$ numeros de la serie Fibonacci, 
+
+1) ¿Cuales son los numeros pares y cuales los impares?
+2) ¿Cual es el numero con más cantidad de divisores? 
+
+Recordar que la serie de Fibonacci está dada por
+
+$$
+F_n = F_{n-1}+F_{n-2}
+$$
+
+#### C) 
+Usando el dataset de `ChickWeight` brinda información acerca de un experimento que probó distintas dietas en distintas pollos:
+```{r}
+#datasets::ChickWeight
+```
+1) ¿Cual es el peso promedio de los pollos? ¿Cual es el peso por promedio en cada grupo?
+2) ¿Cuanto pesan los 10 pollos más liviandos que comieron de la dieta `1`? ¿Cuales son los mas pesados de esa dieta?
+3) De la base total, obtener los registros con indice impar.
+4) Discretizar  la variable `weight`
+5) Generar un histograma de cada grupo de dieta.
+
+#### D) Usando el dataset `Covid19VacunasAgrupadas`
+
+1) Obtener el total de vacunas aplicadas en cada jurisdiccion
+2) Obtener el total de vacunas aplicadas de cada vacuna, independientemente de la jurisdiccion
+
+#### E) Crear una función que:
+
+1) Seleccione las columnas numericas de un dataframe. Parametro: DataFrame
+2) Seleccione las columnas categoricas (factors) de un dataframe. Parametro: DataFrame
+3) Obtenga el factorial de un numero. Parametro: Un Numero
+4) Obtenga los divisores de un numero. Parametro: Un Numero
+5) En base a una columna, obtener una muestra estratificada de tamaño N. Parametros: DataFrame, Columna, Tamaño de la Muestra
+
+
+
+#### F) Varios
+
+1) Considerando los tipos de cambio:
+
+Dolar Solidario: 191
+Dolar Bolsa: 195
+Dolar Blue: 200
+Dolar Oficial: 116
+
+Crear una función que convierta un valor de pesos a dólares. Parametros: Cantidad de Pesos a convertir (numerico), tipo de cambio aplicable (texto)
+
+valorPesos <- function(cantPesos, Cambio){
+    if(Cambio=='Dolar Solidario'){
+      resultado = cantPesos / 191
+  }
+  else if(Cambio == 'Dolar Bolsa'){
+    resultado = cantPesos / 195
+  }
+  else if(Cambio == 'Dolar Blue'){
+    resultado = cantPesos / 200
+  }
+  else if(Cambio == 'Dolar Oficial'){
+    resultado = cantPesos / 200
+  }
+  return(resultado)
+}
+
+valorPesos(200, 'Dolar Blue')
+
+2) Tomar muestras de la base de datos "iris" hasta acumular 5 muestras de
+cada especie.
+
+a) Usar group_by() y sample_n()
+b) Usar un loop (for o while) y realizar una muestra de a uno
+
+3) De la base PlantGrowth, discretizar la variable "weight"
+4) De la base de datos "Orange" crear una variable que sea "crecimiento de la circunferencia por año de vida"
+
+

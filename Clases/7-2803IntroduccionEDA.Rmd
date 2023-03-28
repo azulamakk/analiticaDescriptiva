@@ -1,0 +1,396 @@
+---
+title: "Analisis Exploratorio de Datos (EDA)"
+author: "Lic. Gomez Aguirre"
+date: '2023-03-22'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r, echo=FALSE}
+rm(list = ls())
+```
+
+## Bike Buyers Dataset - EDA
+
+El análisis exploratorio de datos se refiere al proceso inicial crítico al realizar investigaciones sobre datos que permite descubrir patrones, detectar anomalías, probar hipótesis y verificar suposiciones con la ayuda de estadísticas resumidas y representaciones gráficas.
+
+Una buena práctica es comprender los datos primero y tratar de recopilar la mayor cantidad de información posible a partir de ellos./ 
+
+A partir de un EDA se trata de dar sentido a los datos disponibles, antes de ensuciarlos o manipularlos. <https://www.kaggle.com/code/heeraldedhia/exploratory-data-analysis-in-r/notebook>.
+
+
+
+```{r, echo=FALSE}
+setwd("C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/3- Exploracion de la Base y estadistica/Analisis Exploratorio (EDA)/Bike Buyers")
+```
+![](Steps.png)
+
+```{r, echo=FALSE,warning=FALSE,message=FALSE}
+library('ggvis')
+library('tidyverse')
+library('ggplot2')
+```
+El conjunto de datos que vamos a utilizar tiene detalles de 1000 usuarios de diferentes orígenes y si compran o no una bicicleta. Estos datos se pueden utilizar para modelos de predicción utilizando algoritmos de aprendizaje automático, entre otros. Hay algunos valores NA inyectados en el conjunto de datos. Utilice este conjunto de datos para la limpieza, exploración y visualización de datos.
+
+El conjunto de datos contiene las siguientes columnas
+
+* ID
+* Marital Status
+* Gender
+* Income
+* Children
+* Education
+* Occupation
+* Home Owner
+* Cars
+* Commute Distance
+* Region
+* Age
+* Purchased Bike
+
+Algunas preguntas que podriamos tener en cuenta:
+
+- Como utilizaria esta informacion?
+- Que caracteristicas tienen los individuos que compran
+- Que caracteristicas tienen los individuos que no compran
+- Como se relaciona el gasto en biciclestas con el ingreso
+- Como se relaciona el gasto en bicicletas con la cantidad de hijos
+- Como cambia la probabilidad de tener una bicicleta por hijo
+- Como haria para que aumente la cantidad de bicicletas vendidas
+
+
+
+```{r,echo=FALSE}
+bike_buyers = read.csv('bike_buyers.csv', header=T, na.strings='')
+```
+
+```{r}
+str(bike_buyers)
+```
+```{r}
+head(bike_buyers)
+```
+
+```{r}
+summary(bike_buyers)
+```
+
+```{r}
+levels(bike_buyers$Gender)
+```
+```{r}
+bike_buyers$Gender=as.factor(bike_buyers$Gender)
+```
+
+# Assign factors to string values
+
+Existen muchas variables que tienen niveles pero para R, son caracteres.
+
+
+```{r}
+bike_buyers$Marital.Status <- as.factor(bike_buyers$Marital.Status)
+bike_buyers$Gender <- as.factor(bike_buyers$Gender)
+bike_buyers$Home.Owner <- as.factor(bike_buyers$Home.Owner)
+bike_buyers$Purchased.Bike <- as.factor(bike_buyers$Purchased.Bike)
+```
+
+```{r}
+levels(bike_buyers$Gender)
+```
+```{r}
+levels(bike_buyers$Marital.Status)
+```
+```{r}
+levels(bike_buyers$Marital.Status)
+```
+
+```{r}
+levels(bike_buyers$Home.Owner)
+```
+
+```{r}
+levels(bike_buyers$Purchased.Bike)
+```
+
+Existen valores Faltantes en la base?
+
+* Piense por un segundo que deberia hacer si existieran estos valores faltantes.
+* En que variables estos faltantes pueden ser criticos y en cuales no?
+
+```{r}
+colSums(is.na(bike_buyers))
+```
+
+```{r}
+hist(bike_buyers$Income)
+```
+
+```{r}
+hist(bike_buyers$Children, breaks = 20)
+```
+
+```{r}
+hist(bike_buyers$Cars, breaks = 15)
+```
+
+```{r}
+hist(bike_buyers$Age)
+```
+
+# Dealing with NA value
+
+Dado que, la distribución de Ingreso y Edad es asimétrica a la izquierda. Le imputaremos valores de mediana
+
+Calcualo la mediana
+```{r}
+median(na.omit((bike_buyers$Income)))
+
+```
+```{r}
+median(na.omit((bike_buyers$Age)))
+```
+
+```{r}
+bike_buyers_clean = bike_buyers
+colSums(is.na(bike_buyers_clean))
+```
+
+# Income replaced with Median
+
+```{r}
+bike_buyers_clean$Income[is.na(bike_buyers_clean$Income)]= median(na.omit((bike_buyers$Income)))
+```
+
+# Age replaced with Median
+
+```{r}
+bike_buyers_clean$Age[is.na(bike_buyers_clean$Age)] <- 
+  median(na.omit((bike_buyers$Age)))
+```
+```{r}
+colSums(is.na(bike_buyers_clean))
+```
+
+# Mode function
+
+Dado que la moda no es una función incorporada en R, escribimos una función que calcula la frecuencia máxima de valores únicos en cada columna.
+
+```{r}
+get_mode <- function(x) {                 
+  unique_x <- unique(x)
+  tabulate_x <- tabulate(match(x, unique_x))
+  unique_x[tabulate_x == max(tabulate_x)]
+}
+```
+
+
+# Marital Status replaced with Mode
+
+```{r}
+bike_buyers_clean$Marital.Status[is.na(bike_buyers_clean$Marital.Status)] <- 
+  get_mode(bike_buyers$Marital.Status)
+```
+
+# Gender replaced with Mode
+```{r}
+bike_buyers_clean$Gender[is.na(bike_buyers_clean$Gender)] <- 
+  get_mode(bike_buyers$Gender)
+```
+
+# Children replaced with Mode
+
+```{r}
+bike_buyers_clean$Children[is.na(bike_buyers_clean$Children)] <- 
+  get_mode(bike_buyers$Children)
+```
+# Home Owner replaced with Mode
+
+```{r}
+bike_buyers_clean$Home.Owner[is.na(bike_buyers_clean$Home.Owner)] <- 
+  get_mode(bike_buyers$Home.Owner)
+
+colSums(is.na(bike_buyers_clean))
+```
+
+
+# Cars replaced with Mean
+
+```{r}
+bike_buyers_clean$Cars[is.na(bike_buyers_clean$Cars)] <- 
+  mean(bike_buyers$Cars, na.rm = TRUE)
+
+colSums(is.na(bike_buyers_clean))
+```
+
+
+
+# Save clean dataframe
+
+```{r}
+write.csv(bike_buyers_clean,"bike_buyers_clean.csv", quote = FALSE, row.names = TRUE)
+```
+```{r}
+bike_buyers <- bike_buyers_clean
+```
+
+
+# Bar Plot
+
+
+Un gráfico de barras es un gráfico que presenta datos categóricos con barras rectangulares con longitudes proporcionales a los valores que representan. Un gráfico de barras muestra comparaciones entre categorías discretas. Un eje del gráfico muestra las categorías específicas que se comparan y el otro eje representa un valor medido.
+
+```{r}
+counts <- table(bike_buyers_clean$Cars, bike_buyers_clean$Gender)
+barplot(counts, main = '',
+        xlab="Number of Gears",
+        legend = rownames(counts))
+```
+
+# Scatter Plot
+
+Un diagrama de dispersión usa puntos para representar valores para dos variables numéricas diferentes. La posición de cada punto en el eje horizontal y vertical indica valores para un punto de datos individual. Los diagramas de dispersión se utilizan para observar las relaciones entre las variables.
+
+```{r}
+plot(bike_buyers$Income, type= "p")
+```
+
+# Histograma
+
+Un histograma es una representación gráfica de datos utilizando barras de diferentes alturas. En un histograma, cada barra agrupa números en rangos. Las barras más altas muestran que hay más datos en ese rango. Un histograma muestra la forma y la dispersión de datos de muestra continuos.
+
+```{r}
+ggplot(bike_buyers, aes(x = Age)) +
+  geom_histogram()
+
+```
+
+`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+# Density Plot
+
+Un gráfico de densidad es una representación de la distribución de una variable numérica. Utiliza una estimación de densidad kernel para mostrar la función de densidad de probabilidad de la variable (ver más). Es una versión suavizada del histograma y se usa en el mismo concepto.
+
+```{r}
+plot(density(bike_buyers$Income), main='Income Density Spread')
+```
+
+
+# Exploring ggplot library
+
+```{r}
+ggplot(bike_buyers, aes(y = Age, x = Gender)) +
+  geom_point()
+```
+
+
+```{r}
+ggplot(bike_buyers,aes(y = Age, x = Income)) +
+  geom_point()
+```
+
+
+```{r}
+p3 <- ggplot(bike_buyers,
+             aes(x = Age,
+                 y = Income)) + 
+  theme(legend.position="top",
+        axis.text=element_text(size = 6))
+p4 <- p3 + geom_point(aes(color = Age),
+                       alpha = 0.5,
+                       size = 1.5,
+                       position = position_jitter(width = 0.25, height = 0))
+p4 +
+  scale_x_discrete(name="Income") +
+  scale_color_continuous(name="", low = "blue", high = "red")
+```
+
+# Trend Plot
+
+Los diagramas de tendencia se utilizan para ilustrar cómo una variable aleatoria puede cambiar con el tiempo (por ejemplo, ventas, tipos de cambio, precios fijos). Para crear un gráfico de tendencia, primero se debe haber definido un conjunto de celdas como matriz de entrada o salida.
+
+```{r}
+p5 <- ggplot(bike_buyers, aes(x = Age, y = Occupation))
+p5 + geom_line(aes(color = Age))
+```
+
+
+# Box Plots
+
+Un diagrama de caja o diagrama de caja es un método para representar gráficamente grupos de datos numéricos a través de sus cuartiles. Los diagramas de caja también pueden tener líneas que se extienden desde las cajas que indican la variabilidad fuera de los cuartiles superior e inferior, de ahí los términos diagrama de caja y bigotes y diagrama de caja y bigotes.
+
+
+
+
+```{r}
+boxplot(bike_buyers$Income, main = 'Income Boxplot')
+
+```
+
+```{r}
+boxplot(bike_buyers[,c(1,4)], main='Multiple Box plots')
+```
+
+# Outlier Treatment
+
+Los estadísticos a menudo se encuentran con valores atípicos cuando trabajan con conjuntos de datos y es importante lidiar con ellos debido a la forma en que pueden distorsionar un modelo estadístico. Su conjunto de datos puede tener valores que son claramente diferentes de la mayoría de los otros valores, estos se denominan valores atípicos. Por lo general, un valor atípico es una anomalía que ocurre debido a errores de medición, pero en otros casos, puede ocurrir porque el experimento que se está observando experimenta turbulencias momentáneas pero drásticas. En cualquier caso, es importante lidiar con los valores atípicos porque pueden afectar negativamente la precisión de los resultados, especialmente en los modelos de regresión.
+
+Los valores atípicos pueden ser peligrosos para sus actividades de ciencia de datos porque la mayoría de los parámetros estadísticos, como la media, la desviación estándar y la correlación, son muy sensibles a los valores atípicos. En consecuencia, cualquier cálculo estadístico se ve afectado por la presencia de valores atípicos.
+
+En out, se guardan los valores de los puntos de datos que se encuentran más allá de los extremos de los bigotes
+
+![](boxplot.png)
+
+```{r}
+OutVals = boxplot(bike_buyers$Income)$out
+
+print(OutVals)
+
+```
+
+```{r}
+
+which(bike_buyers$Income %in% OutVals)
+
+```
+
+```{r}
+x = bike_buyers$Income [!(bike_buyers$Income %in% OutVals) ]
+boxplot(x)
+```
+
+```{r}
+
+
+bike_buyers[c(which(bike_buyers$Income %in% OutVals)),]
+#c(which(bike_buyers$Income %in% OutVals))
+```
+# Percentiles
+
+La funcion "quantile" nos permite encontrar cualquier percentil
+
+```{r}
+options(scipen=999)
+
+quantile(bike_buyers$Income, c(.10,.25,.50,0.75,.90), na.rm=TRUE)
+```
+
+```{r}
+quantile(bike_buyers$Income, c(0.02,0.98), na.rm=TRUE)
+```
+```{r}
+limite_inferior<-quantile(bike_buyers$Income,0.02, na.rm=TRUE)
+limite_superior<-quantile(bike_buyers$Income,0.98, na.rm=TRUE)
+```
+
+```{r}
+bike_buyers$Income <-ifelse (bike_buyers$Income<limite_inferior, bike_buyers$Income<-limite_inferior, bike_buyers$Income)
+```
+
+```{r}
+bike_buyers$Income <-ifelse (bike_buyers$Income>limite_superior, bike_buyers$Income==limite_superior, bike_buyers$Income)
+```
+```{r}
+quantile(bike_buyers$Income, c(0.01,0.99), na.rm=TRUE)
+```
