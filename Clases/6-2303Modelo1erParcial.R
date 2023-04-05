@@ -15,9 +15,17 @@ division
 pares <- seq(10000, 100000, 2)
 pares
 
+dfColumnaPar <- data.frame(iris[seq(2,ncol(iris),2)])
+dfColumnaPar
+iris
 #c) Realice una mascara booleana para filtrar el vector
-iris %>% mutate(esViginica = Species == 'virginica')
+library(dplyr)
+mascara <- iris$Species == "virginica"
+iris %>% filter(mascara == TRUE)
 
+# INCORRECTO iris %>% mutate(esViginica = Species == 'virginica')
+
+dim(iris)
 #tal que queden solo la especie "virginica" 
 
 #2) Funciones
@@ -88,13 +96,24 @@ ToothGrowth %>% mutate(menorAMedia = menorAPromedio(len))
 # 1) Filtrar por aquellos menores al promedio, ordenarlos de mayor a menor en funcion 
 # de len, y extraer la dosis promedio por suplemento del dataframe resultante
 ToothGrowth %>% filter(menorAPromedio(len) == TRUE) %>% arrange(len)
-dosisPromedio <- ToothGrowth %>% filter(menorAPromedio(len) == TRUE) %>% arrange(-len) %>% group_by(supp) %>% summarise(len_promedio=mean(dose))
+
+dosisPromedio <- ToothGrowth %>% filter(menorAPromedio(len) == TRUE) %>% 
+                    arrange(-len) %>% group_by(supp) %>% 
+                      summarise(len_promedio=mean(dose))
+
 dosisPromedio
+
 dosisPromedio$mean(len)
 colnames(dosisPromedio) 
 #Usando el for-loop y estructuras condicionales (if)
 #1) ?Es 77466871 un numero primo? Si la respuesta es NO, ?cuales son sus divisores?
 divisores = c()
+
+#  for (i in 2:a){
+#   if (a%%i == 0){
+#     divisores_a <- append(divisores_a, i)
+#   }
+
 for(i in 2:77466890){
   if(77466871/i == floor(77466871/i)){
     divisores = append(divisores, i)
@@ -107,13 +126,127 @@ if(length(divisores)>0){
 }else{respuesta = 'Es Primo'}
 
 primo = function(num){
-  
   nums = 2:(num-1)
-  
   print(nums)
-  
   a = num%%nums==0
-  
   return(sum(a))
-  
 }
+
+
+calculador_de_coprimos <- function(a,b){
+  divisores_a <- c()
+  for (i in 2:a){
+    if (a%%i == 0){
+      divisores_a <- append(divisores_a, i)
+    }
+  } #genero un vector con los divisores del numero a
+  divisores_b <- c()
+  for (i in 2:b){
+    if (b%%i == 0){
+      divisores_b <- append(divisores_b, i)
+    }
+  } #genero un vector con los divisores del numero b
+  x <- divisores_a %in% divisores_b #me fijo cuales divisores de a estan en el vector de los divisores de b, y los valores booleanos los almaceno en x
+  y <- divisores_b %in% divisores_a #me fijo cuales divisores de b estan en el vector de los divisores de a y los valores booleanos los almaceno en y
+  
+  es_coprimo = "son co-primos"
+  for (i in x){
+    if (i == TRUE){
+      es_coprimo = "no son co-primos"
+    }
+  } #me fijo en x si hay algun valor TRUE, si es así entonces los numeros no son co-primos
+  for (i in y){
+    if (i == TRUE){
+      es_coprimo = "no son co-primos"
+    }
+  }#me fijo en y si hay algun valor TRUE, si es así entonces los numeros no son co-primos
+  return(es_coprimo)
+}
+#Ejercicio: Encuentre los primeros 10 numeros co-primos de los primeros 10 numeros de la serie de fibonacci
+#a) Realice el ejercicio con un "for" loop
+#b) Realice el ejercicio con un "while" loop
+
+#voy a estar usando los primeros 10 numeros de fibonacci despues del 0 (porque no se puede dividir).
+
+sonCoprimos <- function(a, b) {
+  mayorComunDivisor <- function(x, y) {
+    if (y == 0) {
+      return(x)
+    } else {
+      return(mayorComunDivisor(y, x %% y))
+    }
+  }
+  if(mayorComunDivisor(a, b) == 1){
+    respuesta = 'Son co-primos'
+  }else{
+    respuesta = 'No son co-primos'
+  }
+  return(respuesta)
+}
+sonCoprimos(14,21)
+
+# Fibonacci
+secFibonacci <- function(n) {
+  fib <- numeric(n)
+  fib[1] <- 1
+  if (n > 1) {
+    fib[2] <- 1
+    for (i in 3:n) {
+      fib[i] <- fib[i - 1] + fib[i - 2]
+    }
+  }
+  return(fib)
+}
+
+fibonacci <- secFibonacci(20)
+#Encontrar los primeros 10 coprimos de numeros fibonacci
+
+#Usando while loop
+i <- 1
+while (i <= 10) {
+  coprimos <- numeric(10)
+  count <- 0
+  j <- 3
+  while (j <= 15 && count < 10) {
+    if (i != j && sonCoprimos(fibonacci[i], fibonacci[j])=="Son co-primos") {
+      count <- count + 1
+      coprimos[count] <- fibonacci[j]
+    }
+    j <- j + 1
+  }
+  # Print the coprimes of each Fibonacci number
+  cat("The first 10 coprimes of Fibonacci", i, "are:", coprimos, "\n")
+  i <- i + 1
+}
+
+#Usando for loop 
+for (i in 1:10) {
+  coprimos <- numeric(10)
+  count <- 0
+  for (j in 3:15) {
+    if (i != j && sonCoprimos(fibonacci[i], fibonacci[j])=="Son co-primos"){
+      count <- count + 1
+      coprimos[count] <- fibonacci[j]
+      if (count == 10) {
+        break
+      }
+    }
+  }
+  # Print the coprimes of each Fibonacci number
+  cat("The first 10 coprimes of Fibonacci", i, "are:", coprimos, "\n")
+}
+
+sacarRepetidos <- function(v){
+  nuevo<-c()
+  v1<-c()
+  for(i in 1:length(v)){
+    if(v[i] %in% nuevo){
+      v1<- append(v1, v[i])
+    }else{
+      nuevo<- append(nuevo, v[i])
+    }
+  }
+  return(v1)
+}
+conRepetidos <- c(1,1,3,4,4,6)
+sacarRepetidos(conRepetidos)

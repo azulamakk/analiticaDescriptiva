@@ -73,19 +73,19 @@ calculador_de_coprimos <- function(a,b){
   
   es_coprimo = "son co-primos"
   for (i in x){
-    if (i == T){
+    if (i == TRUE){
       es_coprimo = "no son co-primos"
     }
   } #me fijo en x si hay algun valor TRUE, si es así entonces los numeros no son co-primos
   for (i in y){
-    if (i == T){
+    if (i == TRUE){
       es_coprimo = "no son co-primos"
     }
   }#me fijo en y si hay algun valor TRUE, si es así entonces los numeros no son co-primos
   return(es_coprimo)
 }
 
-calculador_de_coprimos(6,19)
+calculador_de_coprimos(6,27)
 
 
 ##5) CONTROL DE FLUJO
@@ -95,8 +95,9 @@ calculador_de_coprimos(6,19)
 #b) Realice el ejercicio con un "while" loop
 
 #voy a estar usando los primeros 10 numeros de fibonacci despues del 0 (porque no se puede dividir).
-numeros_fibo = c(1) 
+numeros_fibo = c(0, 1) 
 i = 1
+
 while(length(numeros_fibo)<10){
   if(length(numeros_fibo)<=1){
     numeros_fibo=append(numeros_fibo,1)    
@@ -115,7 +116,8 @@ lista_vacia <- vector("list", length = 10)
 lista_vacia
 coprimos <- c()
 
-for (i in lista_vacia){
+
+for (i in 1:length(lista_vacia)){
   while (length(coprimos) < 10){
     d <- i + 1
     if(calculador_de_coprimos(i,d) == "son co-primos"){
@@ -126,9 +128,3 @@ for (i in lista_vacia){
 }
 
 lista_vacia
-
-
-
-
-
-
