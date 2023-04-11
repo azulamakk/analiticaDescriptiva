@@ -3,11 +3,22 @@ acceso_info_publica <- read_delim("~/Desktop/Analitica Descriptiva/Trabajo Pract
 
 dim(acceso_info_publica)
 filas <- nrow(acceso_info_publica)
-ncol(acceso_info_publica)
+columnas <- ncol(acceso_info_publica)
 
+sapply(acceso_info_publica, class)
 head(acceso_info_publica)
 tail(acceso_info_publica)
 colnames(acceso_info_publica)
+
+acceso_info_publica$fecha <- as.Date(acceso_info_publica$fecha,
+           format = "%d/%m/%Y")
+acceso_info_publica$vencimiento_1 <- as.Date(acceso_info_publica$vencimiento_1,
+                                     format = "%d/%m/%Y")
+acceso_info_publica$vencimiento_2 <- as.Date(acceso_info_publica$vencimiento_2,
+                                             format = "%d/%m/%Y")
+acceso_info_publica$fecha_respuesta <- as.Date(acceso_info_publica$fecha_respuesta,
+                                             format = "%d/%m/%Y")
+sapply(acceso_info_publica, class)
 
 #1------ Analis exploratorio: Informacion preliminar
 unique(acceso_info_publica$dependencia)
