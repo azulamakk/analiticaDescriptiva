@@ -1,0 +1,976 @@
+---
+title: "Relacion entre Variables"
+author: "Lic. Gomez Aguirre"
+date: "4/10/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r, echo=FALSE}
+rm(list = ls())
+```
+
+# Contenidos
+
+## ¿Cómo establecer una relación entre dos variables?
+
+#### Diagrama de dispersión con ggplot
+
+#### Correlacion
+###### Correlacion de Pearson
+###### Correlacon de Spearman
+
+## Test de hipótesis
+
+#### Igualdad de medias
+#### Significatividad en la Correlación
+#### Igualdad de varianza
+
+## Regresion Simple
+
+
+## Motivacion
+
+```{r}
+library(ggplot2)
+
+x1=seq(100)+rnorm(100,mean = 0,sd=10)
+x2=200+seq(100)+rnorm(100,mean = 2,sd=10)
+p=(exp(5+0.8*x1-0.15*x2)/(1+exp(5+0.8*x1-0.15*x2)))+runif(n = 100,min = -0.5,max = 0.5)
+z=seq(length(p))
+
+for (i in seq(length(p))) {
+  if (p[i]>0.5){
+    z[i]=1
+    }else{
+      z[i]=0
+  }
+}
+y<-200+0.75*x1-1.5*x2+0.15*z +rnorm(100,mean = 0,sd=5)
+```
+#
+```{r}
+df= cbind(x1,x2,z,y)
+df=as.data.frame(df)
+```
+
+```{r}
+summary(df)    
+```
+```{r}
+ggplot(df,aes(x = x1, y = y)) + geom_point()+ ggtitle(" Scatter plot")
+```
+```{r}
+ggplot(df,aes(x = x2, y = y)) + geom_point()+ ggtitle(" Scatter plot")
+```
+```{r}
+ggplot(df,aes(x = z, y = y)) + geom_point()+ ggtitle(" Scatter plot")
+```
+
+```{r}
+plot(y)
+```
+
+```{r}
+hist(y)
+```
+## Supongamos que falta algunos datos
+
+```{r}
+dff=df
+```
+
+```{r}
+dff$y[5]=NA
+dff$y[50]=NA
+dff$y[100]=NA
+dff$y[90]=5000
+```
+```{r}
+c(dff$y[5],dff$y[50],dff$y[90],dff$y[100])
+```
+#
+# Completamos los faltantes con la media
+#
+```{r}
+media=mean(dff$y,na.rm = TRUE)
+dff$y[5]=media
+dff$y[50]=media
+dff$y[100]=media
+```
+#
+# comparamos los resultados
+#
+
+```{r}
+mm=data.frame(
+  "termino" = c("Media","dato_real"),
+  "id_5" = c(media,df$y[5]),  
+  "id_50" = c(media,df$y[50]), 
+  "id_100" = c(media,df$y[100]))
+mm
+```
+
+
+
+## Que pasa con otra variable distinta a la objetivo?
+
+
+```{r}
+table(df$z)
+```
+
+
+```{r}
+sum(dff$z,na.rm = TRUE)/length(df$z)
+```
+```{r}
+dff$z[15]=NA
+dff$z[25]=NA
+dff$z[75]=NA
+```
+#
+### Comparando resultados
+#
+```{r}
+frec=sum(dff$z,na.rm = TRUE)/length(dff$z)
+input=0
+if (frec>0.5){
+  input=1
+} else{
+  input=0
+}
+mm=data.frame(
+  "termino" = c("frecuencia","inputacion","dato_real"),
+  "id_15" = c(frec,input,df$z[10]),  
+  "id_25" = c(frec,input,df$z[25]), 
+  "id_75" = c(frec,input,df$z[75]))
+mm   
+```
+
+## Nos deberiamos preguntar que tan representativo es un input no condicionado?
+#
+## Hay alguna forma de mejorar los resultados obtenidos?
+#
+
+```{r}
+setwd("C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion")
+```
+
+
+### Relacion entre variables
+
+### Si estamos interesados en observar y medir la relación entre 2 variables numéricas. 
+#
+### Por ejemplo, si queremos evaluar la relación entre:
+
+* Las inversiones realizadas en explotaciones agrícolas y el rendimiento obtenido en dólares,
+
+* Las horas que se dedican a estudiar una asignatura y la calificación obtenida en el examen correspondiente,
+
+* La relación entre una medida de agresividad y la edad de los sujetos evaluados,
+   
+* La educacion y el ingreso laboral
+
+* La cantidad de horas de estudio y el promedio de calificaciones 
+
+* Si estamos en una fábrica de piezas mecánicas y queremos analizar la relación 
+  entre la porosidad y la resistencia de las piezas.
+
+
+### Cómo podemos establecer una relaciones?
+
+#### El diagrama de dispersión nos permite observar características importantes de la relación.
+
+#### Si observas la siguiente figura tienes cuatro ejemplos de relaciones entre varialbes:
+# 
+* 1- ejemplo de relación Lineal (izquierda superior), 
+* 2- ejemplo de relación no lineal pero monótona (derecha superior), 
+* 3- ejemplo de relacion lineal exacta pero vulnerada por un  outlier y, 
+* 4- en el último vemos que no existe realmente una relación entre “x” e “y”,  sino que existe un outlier que puede confundir los resultados.
+
+
+![](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/Imagen1.png){ width=75%}
+
+#### Caso 1: el primer caso muestra una relacion positiva en lo que podria ser un conjunto de datos bivariado. Cada punto es un par ordenado de las dos variables, como puede verse el conjunto de pares ordenado no estan alineados en forma exacta sobre una linea recta. Si un aumento en la variable del eje de ordenadas (llamemosle "y") habitualmente, se asocia con un aumento en la variable del eje de abscisas (llamemosle "x"), entonces tenemos una relacion positiva. 
+
+## Correlacion
+
+#### La forma de medir el grado de asociacion entre las variables, mas alla del analisis grafico, es por medio de la correlacion.
+
+
+#### Antes de seguir avanzando, pensemos en la formula de la correlacion (como medida de asociacion lineal entre variables). El coeficiente de correlacion de Pearson mide el grado de asociasion lineal etre un par de variables.
+
+![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/formula correlacion.png){ width=60% }
+
+### Es el método de correlación más utilizado pero asume que:
+
+* 1- la tendencia debe ser de tipo lineal.
+
+* 2- no existen valores atípicos (outliers).
+
+* 3- las variables deben ser numéricas. Si las variables son de tipo ordinal (como las preguntas en escala de likert), no podremos aplicar la correlación de Pearson.
+
+* 4- tenemos suficientes datos(algunos autores recomiendan tener más de 30 puntos u observaciones).
+
+
+### El coeficiente de correlacion de Spearman mide relaciones monotonas.
+
+![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/spearman.png){ width=50% }
+
+![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/image001.png){ width=80% }
+### Ejemplo:
+# 
+![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/image002.png){ width=70% }
+  
+  ![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/image003.png){ width=100% }
+  
+  
+### El coeficiente de correlación de Spearman es recomendable utilizarlo cuando:
+* los datos presentan valores extremos, ya que dichos valores afectan mucho el coeficiente de correlación de Pearson, o 
+* ante distribuciones no normales. 
+
+# Correlacion ante elementos estocasticos
+
+### Si los puntos se alejan de esa linea imaginaria, la asociacion lineal entre las variables disminuye, disminuye. Veamos un ejemplo:
+![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/gradodeasoc.png){ width=80% }
+
+### Para interpretar qué tan fuerte es la correlación podemos utilizar el criterio de Cohen de 1988, quién para valores absolutos indica que valores entre:  
+#
+#### Entre 0.1 - 0.3 representan un efecto pequeño,  
+#
+#### Entre 0.3 - 0.5 un efecto medio y
+#
+#### >= .5 un efecto grande.  
+#
+
+#### Veamos como funciona la formula de correlacion como medida de asociacion (lineal)
+
+
+```{r}
+library(ggplot2)
+
+x<-seq(100)+rnorm(100,mean = 0,sd=10)
+
+y<-200+0.75*x+rnorm(100,mean = 0,sd=5)
+
+df= cbind(x,y)
+df=as.data.frame(df)
+
+ggplot(df,aes(x = x, y = y)) + geom_point()+ ggtitle(" Scatter plot")
+
+```
+
+#### Veamos diferentes situaciones
+# 
+```{r}
+cor(x,y)
+
+```
+
+#### El grafico dos muestra una situacion muy distinta, la relacion entre las dos variables no es lineal, de hecho parece ser cuadratica, que ocurre con la correlacion LINEAL?
+
+```{r}
+x<-seq(-50,49)+rnorm(100,mean = 0,sd=10)
+
+y<-10*x+20*x^2+x^3-8+rnorm(100,mean = 0,sd=50)
+
+df= cbind(x,y)
+df=as.data.frame(df)
+
+ggplot(df,aes(x = x, y = y)) + geom_point()+ ggtitle(" Scatter plot")
+
+```
+
+### Pongamos a prueba la asociacion lineal
+
+```{r}
+cor(x,y)
+cor(x, y, method = "spearman")
+
+```
+
+#### El grafico tres otra situacion, existe uno o varios outier en la muestra, como afecta esto a la correlacion? recuerde que la mayoria de las bases de datos con las que nos enfrentamos tienen mucho ruido.
+
+```{r}
+x1<-seq(50)+rnorm(50,mean = 0,sd=10)
+x2=rep(51)+rnorm(1,mean = 0,sd=10)
+x3<-seq(52,100)+rnorm(49,mean = 0,sd=10)
+x=c(x1, x2,x3)
+plot(x)
+
+```
+```{r}
+y1<-2+0.8*x1+rnorm(length(x1),mean = 0,sd=5)
+y2<-20+8*x2+rnorm(length(x2),mean = 100,sd=10) ### Aca se introduce el outlier
+y3<-2+0.8*x3+rnorm(length(x3),mean = 0,sd=5)
+y=c(y1,y2,y3)
+df= cbind(x,y)
+df=as.data.frame(df)
+
+ggplot(df,aes(x = x, y = y)) + geom_point()+ ggtitle(" Scatter plot")
+
+```
+
+### Piensen un segundo por que razon podria ocurrir un valor extremo como el que estamos incorporando (luego lo analizaremos):
+
+* Un error de tipeo
+* Una coma mal puesta
+* Hay un individuo que se comporta diferente al resto
+* Por que podria ocurrir que un individuo no se comporte como el resto
+* Es una medida de nuestra ignorancia?
+
+```{r}
+cor(x,y)
+```
+
+
+```{r}
+cor(x, y, method = "spearman")
+
+```
+### Son estas correlaciones iguales?
+
+# 
+#### El paquete corplot tiene graficas para analizar la correlacion. el analisis con dos varialbes no requiere demasiado, pero cuando tienen que correlacionar muchas variables, esto comienza  a ser relevante.
+#
+
+```{r,message=FALSE}
+library("corrplot")
+```
+
+```{r}
+data(mtcars)
+head(mtcars)
+```
+
+```{r}
+M <- cor(mtcars)  #permite ejecutar una matriz de correlación
+```
+
+```{r}
+corrplot(M, method = "ellipse")
+```
+```{r}
+cor(mtcars$mpg, mtcars$am)
+cor(x, y, method = "spearman")
+```
+
+```{r}
+cor(mtcars)
+```
+
+### Por que haria una comparacion entre dos correlaciones
+
+## Ejemplo:
+# 
+### Muestra1: Corr(mtcars$am,mtcars$gear)
+### Muestra2: Corr(mtcars$am,mtcars$gear)
+#
+### Son estas dos correlaciones iguales, que implicaria que lo sean o que no lo sean?
+# 
+# 
+# 
+
+## Ejemplo (precios)
+
+### carguemos unos datos
+
+```{r}
+library(readxl)
+preciost <- read_excel("precios.xlsx", 2) # Este es el set de datos originales tiene algunos faltantes producto de Covid-19 y titulos muy largos
+precios <- read_excel("precios.xlsx", 1) # esta base es la misma que la anterior pero sacando los missings, cortando la muestra a los valores existentes y asignandole un indice a los titulos
+colnames(preciost)
+```
+
+
+```{r}
+M <- cor(precios, method = c("spearman"), use = "complete.obs")  #permite ejecutar una matriz de correlación
+```
+```{r}
+corrplot(M, method = "ellipse")
+```
+
+### 1) Que le sugiere el grafico?
+### 2) Que se podria hacer?
+
+## Ejercicios
+
+```{r}
+Notas <- read_excel("Ejercicio.xlsx")
+head(Notas, 18)
+```
+# 
+### Sobre el set de datos Notas
+# 
+# 
+#### a- Realice un scatter plot
+#
+#### b- Calcule el coeficiente de Correlacion de Spearman
+#
+#### c- Calcule el coeficiente de Correlacion de Pearson
+#
+#### d- Compare los resultados. busque en la bibliografia y de una explicacion de estas diferencias
+#
+#
+## Test de hipótesis
+#
+#
+#### Igualdad de medias
+#
+#### Significatividad en la Correlación
+#
+#### Independencia de variables
+#
+#
+#
+## Que es un test de hipotesis?
+#
+
+### Un test de hipotesis es una herramienta que permite tomar una decision sobre la veracidad de una presumcion respecto de un evento o hecho especifico.  
+
+![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/errortipo.jpg){ width=100% }
+
+### El problema de la decision consiste en:   
+
+### 1- Rechazar la hipotesis nula, cuando la H0 es verdadera. 
+
+### 2- No rechazar la hipotesis nula, cuando esta es verdadera (el acusado es inocente).  
+
+
+### Para que podemos usar este razonamiento?
+
+### ahora nuestro acusado es un estadistico muestral (media, mediana, moda, varianza, correlacion, etc).
+
+
+
+### **IGUALDAD DE MEDIAS**         
+
+
+
+### Suponga que se ha observado una muestra con media X = 92 cuya poblacion tiene media Mu=100.         
+ 
+### Hay dos interpretaciones posibles de esta observación:          
+ 
+### 1- La media poblacional es realmente igual que 100, y la media muestral es igual a 92 debido a la variabilidad propia de la variable aleatoria X.   
+ 
+### 2- La media poblacional es en realidad distinta de 100, y la media muestral refleja este hecho (=100).   
+ 
+### Estas dos explicaciones tienen nombres: la primera se llama hipótesis nula; la segunda es la hipótesis alternativa.       
+
+### Analicemos este problema:         
+
+### Supongamos que la variable aleatoria de interés X tiene una media μ y una varianza σ2 conocida. Asumimos que X tiene distribución normal, es decir X~N(μ,σ2)         
+
+### El estadistico muestral tiene una distribucion 
+
+![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/testdehipo1.png){ width=150% }
+
+
+
+### Supongamos ahora que queremos determinar si el valor poblacional es igual a un valor especifico con la unica informacion con la que contamos, que en definitiva es una muestra. Por lo tanto formulamos una hipotesis nula respecto del valor especifico.         
+
+![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/testdehipo3.png){ width=150% }
+
+
+### Recuerde que como estamos tomando una decisión basados en el valor de un estadístico podemos cometer dos tipos de errores:         
+
+* rechazar H0 cuando ésta es verdadera,         
+* aceptar H0 cuando ésta es falsa,         
+
+### El primero se conoce como error de tipo I, y el segundo como error de tipo II.         
+
+### Para calcular estas probabilidades debemos conocer la distribución del estadístico de prueba en el caso de ser H0 verdadera, es decir debemos conocer la distribución del estadístico de prueba “bajo H0 ”.         
+
+
+### Si la hipotesis nula de Mu=Muo es verdadera, entonces:          
+
+![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/testdehipo4.png){ width=150% }
+### por lo tanto el estadistico z es:         
+
+
+![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/testdehipo2.png){ width=150% }
+# 
+
+![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/Imagen1e.png){ width=150% }
+
+
+## Ejemplo Diferencia de media          
+
+```{r}
+boxplot(mtcars$mpg ~ mtcars$am, col = "gray",
+        main = "Millas por Galon\nsegún el tipo de transmision\n(0 = automatic, 1 = manual)")
+```
+# 
+### calculemos las estadiscitas asociadas a las millas por galon y el tipo de transmision        
+
+```{r}
+media<-tapply(mtcars$mpg, INDEX = mtcars$am, FUN = mean)
+sdv<-tapply(mtcars$mpg, INDEX = mtcars$am, FUN = sd)
+media
+sdv
+```
+
+### PREGUNTA 1         
+
+### Es la media de la transmsion automatica (cero) igual a 24 millas por galon?         
+
+```{r}
+Z=(17.14-0)/(3.833/(19)^0.5)
+abs(Z)
+
+```
+```{r}
+qt(0.975,18)
+```
+# Comparación de la media muestral con la media poblaional
+
+```{r}
+test <- t.test(mtcars$mpg, mu=17) 
+ 
+print(test)
+```
+
+### PREGUNTA 2         
+
+### Es la transmision automatica mas eficiente que la manual?         
+
+### si las varaibles son independientes y la cantidad de observacioens es menor a 30         
+
+![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/Imagen1b.png){ width=50% }
+
+```{r}
+test <- t.test(mtcars$mpg,mtcars$mpg) # Prueba t de Student
+
+print(test)
+```
+
+
+### **SIGNIFICATIVIDAD DEL COEFICIENTE DE CORRELACION**
+
+
+* H0:rxy = 0 ⇒ El coeficiente de correlación obtenido procede de una población cuya
+correlación es cero ( ρ = 0 ).
+
+* H1 : rxy no = 0 ⇒ El coeficiente de correlación obtenido procede de una población cuyo
+coeficiente de correlación es distinto de cero ( 0 ρ ≠ ). 
+
+![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/Imagen1corre.png){ width=30% }
+# 
+### EJEMPLO
+# 
+```{r}
+cor.test(mtcars$mpg, mtcars$hp)
+```
+ 
+
+### EL TEST CHI2
+# 
+### El estadistico de chi-cuadrado, es util cuando estamos trabajando con variables nominales, categoricas o estamos trabajando con alguna clase de clasificacion.           
+#
+### Su formula estadistica esta dada por:
+#
+### si las varaibles son independientes y la cantidad de observacioens es menor a 30
+
+![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/formula-chi.png){ width=30% }
+
+### Donde:fO= se refiere a las frecuencias observadas ft= frecuencias esperadas
+
+### El estadistico de chi2 resulta util para trabajar datos, como frecuencias, o categoricos, como por ejemplo:   
+
+### hay 15 hombres y 19 mujeres en un aula de clase. Como ven en los datos, no nos interesa cada dato como independiente, si no como su frecuencia de la clase o categoria dada, en este caso la clase es el genero (hombres y mujeres). 
+
+### El valor observado es 15 y 19. Para el calculo del valor esperado se obtiene de (15+19)/2=17
+
+
+```{r}
+frec<-c(15,19)
+chisq.test(frec)
+```
+```{r}
+qchisq(0.95,1)
+```
+
+
+
+### Ejemplo 2
+
+### Un estudio intenta comparar si existe relación entre el estado civil de las personas y la incidencia de la obesidad. Para ello se dispone de los siguientes datos. ¿Es significativa la relación entre ambas variables para un nivel de significancia del 5%?
+
+### Obesidad	 soltero	pareja	casado
+### Obeso	       81	   103	    147
+### No_obeso	  359	   326	    277
+
+### Hipótesis
+
+* H0: Obesidad y estado civil son independientes, el % de obesos no varía entre los diferentes niveles de la variable estado civil.
+
+* Ha: Obesidad y estado civil son dependientes, el % de obesos sí varía entre los diferentes niveles de la variable estado civil.
+
+
+### Calcular el número de eventos esperados en cada combinación de niveles siendo Ho cierta Calcular el % de obesidad en toda la muestra: % obesidad = 331/1293=0.256
+
+Si H0 es cierta, la cantidad de obesos en cada nivel de la variable estado civil será igual al número marginal de ese nivel multiplicado por el % obesidad.
+
+```{r}
+fila1 <- c(81, 103, 147)
+fila2 <- c(359, 326, 277)
+tabla <- as.table(rbind(fila1, fila2))
+dimnames(tabla) = list(Peso = c("Obeso","No obeso"),
+                       Estado_civil = c("soltero","pareja","casado"))
+tabla
+```
+
+```{r}
+chisq.test(x = tabla)
+```
+
+#
+#
+## TEST DE FISHER
+#
+### La prueba de Fisher es el test utilizado cuando se quiere estudiar si existe asociación entre dos variables cualitativas, es decir, si las proporciones de una variable son diferentes dependiendo del valor que adquiera la otra variable. En la gran mayoría de casos, el test de Fisher se aplica para comparar dos variables categóricas con dos niveles cada una (tabla 2x2). Es posible utilizarlo con tablas 2xK niveles pero los requerimientos de cálculo son altos.
+#
+### El test de Fisher es más preciso que sus equivalentes aproximados (test chi-square de independencia o G–test de independencia) cuando el número de eventos esperado por nivel es pequeño. Se recomienda utilizarlo siempre que sea posible (tiempo de computación) aunque para observaciones totales >1000 los resultados de los test aproximados son muy parecidos.
+#
+#
+### Hipótesis
+
+* Ho: Las variables son independientes por lo que una variable no varía entre los distintos niveles de la otra variable.
+
+* Ha: Las variables son dependientes, una variable varía entre los distintos niveles de la otra variable.
+
+
+# tabla de contingencia
+
+```{r}
+M <- as.table(rbind(c(762, 327, 468), c(484, 239, 477)))
+dimnames(M) <- list(genero= c("F", "M"),
+      Horario= c("Mañana","Tarde", "Noche"))
+M
+
+```
+```{r}
+plot(M, col = c("red", "blue"), main = "Genero vs.Turno")
+```
+# ¿Estas diferencias serán estadísticamente significativas? Utilizaremos la prueba de chi-cuadrado:
+
+```{r}
+chisq.test(M)
+```
+# si se acepta la H0 entonces, los horarios de estudio son independietes del genero, o dicho de otra forma los dos agrupamientos son iguales
+
+# si no puedo aceptar la H0 entonces, los horarios de estudio dependen del genero
+
+```{r}
+M <- as.table(rbind(c(81, 103, 147), c(359, 326, 277)))
+dimnames(M) <- list(Obesidad= c("Obeso", "No_Obeso"),
+      Estado_civil= c("Soltero","Pareja", "Casado"))
+M
+```
+
+```{r}
+plot(M, col = c("red", "blue"), main = "Obesidad vs.Estado Civil")
+```
+```{r}
+chisq.test(M)
+```
+
+# rechazo la hipotesis nula, con lo cual el grado de obesidad depende del estado civil de los individuos o las dos variables estan relacionadas.
+
+
+
+```{r}
+chisq.test(x = M)$residuals
+```
+
+```{r}
+chisq.test(x = M)$stdres
+```
+
+```{r}
+solteros_casados <- M[, c(1,3)]
+solteros_casados
+```
+
+
+```{r}
+chisq.test(solteros_casados)
+```
+```{r, message=FALSE}
+library("vcd")
+
+```
+
+Dado que el test de Fisher contrasta si las variables están relacionadas, al tamaño del efecto se le conoce como fuerza de asociación. Existen múltiples medidas de asociación, entre las que destacan phi o Cramer’s V. Los límites empleados para su clasificación son:
+
+pequeño: 0.1
+mediano: 0.3
+grande: 0.5
+
+
+```{r}
+assocstats(solteros_casados)
+```
+Se confirma que al menos entre los grupos casados y solteros sí hay una asociación significativa de las variables “estado civil” y “obesidad” con un tamaño de asociación Cramer’s V pequeño. Por lo tanto se puede afirmar que el porcentaje de gente obesa está asociado al estado civil.
+
+
+
+### Ejemplo
+
+### Se quiere estudiar si la reacción alérgica a un compuesto y una determinada mutación en un gen están relacionados. Para ello se realiza un test alérgico sobre un grupo de individuos seleccionados al azar y se genotipa el estado del gen de interés ¿Existe un diferencia significativa en la incidencia de la mutación entre los alérgicos y no alérgicos?
+
+
+### Ejercicio:  seleccione grupos de la muestra  por VS y AM y determine si  a) los dos grupos tiene la misma media para las MPG y los QSEC; b) El primer grupo tiene una media mayor que el segundo grupo para MPG y QSEC, c) los dos grupos tiene la misma varianza para MPG y QSEC; d) determine si las medias de MPG y QSEC pueden ser mayores a   30 y 20 respectivamente; e) determine la probabilidad del punto d); f) son las distribuciones de MPG y QSEC asimétricas para MPG y QSEC, en cada uno de los grupos;  g) verifique la relación entre MPG y HP para cada uno de los grupo s e interprete los resultados (utilice un ggplot), podría indicar una ecuación para esa relación. 
+
+
+#### test de normalidad
+```{r}
+summary(iris)
+```
+
+```{r}
+hist(iris$Sepal.Length)
+```
+
+```{r}
+shapiro.test(iris$Sepal.Length)
+```
+
+
+
+
+
+
+### Ejercicio: 
+
+* 1) tome su dataset con sus datos categoricos y trate de formular una hipotesis de independencia.
+
+* 2) tome un grupo de variables continuas y arme grupos con aquellas variables mas correlacinadas
+
+* 3) evalue la posibilidad de utilizar el test de Pearson
+
+* 4) evalue la posibilidad de armar grupos de variables continuas con categoricas y establecer la independiencia
+
+# Regresion
+
+
+# Regresion logistica
+
+Una de las principales aplicaciones de la regresión logística es la de clasificación binaria, en el que las observaciones se clasifican en un grupo u otro dependiendo del valor que tome la variable empleada como predictor. Por ejemplo, clasificar a un individuo desconocido como hombre o mujer en función del tamaño de la mandíbula.
+
+Es importante tener en cuenta que, aunque la regresión logística permite clasificar, se trata de un modelo de regresión que modela el logaritmo de la probabilidad de pertenecer a cada grupo. La asignación final se hace en función de las probabilidades predichas.
+
+
+![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/descarga.png){ width=70% }
+
+
+
+
+
+#
+#
+#
+### Que tipo de funciones tenemos para emular una probabilidad, como puede verse, un modelo lineal no es representativo del problema
+#
+#
+#
+![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/descarga1.png){ width=70% }
+
+
+
+
+
+#
+#
+### En nuestro caso, la variable dependiente o a explicar, es una variable del sistema pero no es la varable objetivo. Esto pude servir para mejorar nuestra conocimiento no condicional que surge del calculo de la frecuencia? Veamos que sucede.
+#
+#
+
+# Los pasos que vamos a realizar son los siguiente:
+#
+* Separo los registros de los datos faltantes y construyo un set de datos
+* Sobre el conjunto de datos que no tiene faltantes, armo un conjunto de entrenamiento y otro de testeo
+* Aplicamos la funcion glm sobre los datos de z enfuncion de el resto de los datso del sistema
+* Evaluo que tan bueno es nuestro ejercicio condicional con una matriz de confusion y comparo lo obtenido con el resultado no condicional
+* Reemplazo los valores faltantes por los predichos y los convierto en categorias
+
+
+
+### Hagamos una base con los datos faltantes de z y uno con los datos completos de z, al cual separaremos en dos.
+
+
+
+```{r}
+dfpred= dff[is.na(dff$z),]
+dfpred 
+```
+
+```{r}
+dftoprove= dff[!is.na(dff$z),]
+head(dftoprove)
+```
+
+### Ahora voy a separar el set de datos en test y train, esto es mas comun en modelos predictivos pero vamos a introducirlo de forma que vaya siendo lo mas natural posible.  
+
+```{r}
+library(dplyr)
+set.seed(1)
+
+#create ID column
+dftoprove$id <- 1:nrow(dftoprove)
+
+#use 70% of dataset as training set and 30% as test set 
+train <- dftoprove %>% dplyr::sample_frac(0.70)
+test  <- dplyr::anti_join(dftoprove, train, by = 'id')
+```
+```{r}
+train=train[,(names(train)!="id")]
+test=train[,(names(train)!="id")]
+```
+
+
+```{r}
+logit=glm(z ~ x1 + x2 + y, data=train) 
+summary(logit)
+```
+```{r}
+test$pred=predict(object = logit,newdata = test)
+test$predbin = (test$pred > 0.5) * 1
+
+
+head(test)
+```
+
+```{r}
+colnames(test)
+```
+
+# como podemos comprar los resultados de este ejercicio
+voy a usar una matriz de confusion, solo a los fines de ver si esta idea aumenta mis chances de inputar
+
+Que es una matriz de confusion?
+
+![Caption for the picture.](C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion/Confusion-matix-demo.png){ width=100% }
+### Nos permite comprar los datos predichos de los observados en un ejercicio de testeo
+
+
+
+
+```{r}
+#install.packages('caret')
+library(caret)
+example <- confusionMatrix(as.factor(test$predbin), as.factor(test$z))
+example
+```
+
+si este resultado es mejor que el que obtuvimos con la imputacion no condicionada, entonces hamos ganado algo de informacion.
+
+apliquemoslo a nuestros datos
+```{r}
+which(is.na(dff$z))
+```
+
+```{r}
+dff[is.na(dff)]=predict(object = logit,newdata = dfpred)
+```
+```{r}
+
+dff$z[dff$z>0.5] = 1
+dff$z[dff$z<=0.5] = 0
+head(dff)
+```
+```{r}
+
+dff[c(15,25,75),]
+
+```
+
+```{r}
+
+df[c(15,25,75),]
+
+```
+
+#
+#
+#
+#
+
+# Regresion lineal simple
+
+*** 
+
+\begin{equation}
+
+\ y = \alpha + \beta_1*x_1i + \beta_2*x_2i + \beta_3*binaria_i + \varepsilon_i
+\end{equation}
+
+\begin{equation}
+
+\varepsilon_i \approx N(0,\sigma^2)
+
+\end{equation}
+
+
+***
+
+# Función lm
+
+La función lm (linear model) de R se usa para ajustar un modelo de regresión lineal simple, la estructura de esta función se muestra a continuación.
+#
+#
+```{r}
+modelolin=lm(y ~ x1 + x2 + z, dff)
+summary(modelolin)
+```
+
+A continuación se presenta una corta descripción de los argumentos más usados en la función.
+
+formula: es un objeto de la clase fórmula para indicar la variable respuesta y las covariables. Por ejemplo, si formula = y ~ x1 + x2 lo que se indica es que la variable respuesta es y, las covariables serían x1 y x2.
+data: es el marco de datos donde se buscarán las variables usadas en la fórmula. Si este parámetro queda vacío, R buscará las variables en el ambiente global.
+
+
+
+Función predict
+
+La función predict es una función genérica que se puede aplicar a un modelo ajustado para obtener los valores de y estimados. Abajo se muestra la estructura de la función predict con la lista de sus argumentos.
+
+
+```{r}
+dff$y[5]=NA
+dff$y[50]=NA
+dff$y[100]=NA
+dff$y[90]=5000
+```
+
+```{r}
+nuevo <- dff[c(5,50,100),]
+```
+
+
+```{r}
+c(dff$y[5],dff$y[50],dff$y[90],dff$y[100])
+```
+
+
+```{r}
+predict(modelolin, newdata= nuevo)
+
+```
+
+
+```{r}
+dff[c(5,50,100),]
+```
+
+# Realice los siguientes pasos:
+#
+* Separo los registros de los datos faltantes y construyo un set de datos
+* Sobre el conjunto de datos que no tiene faltantes, armo un conjunto de entrenamiento y otro de testeo
+* Aplicamos la funcion glm sobre los datos de z enfuncion de el resto de los datso del sistema
+* Evaluo que tan bueno es nuestro ejercicio condicional con una matriz de confusion y comparo lo obtenido con el resultado no condicional
+* Reemplazo los valores faltantes por los predichos y los convierto en categorias
+
