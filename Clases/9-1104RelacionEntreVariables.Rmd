@@ -380,8 +380,8 @@ cor(mtcars)
 
 ```{r}
 library(readxl)
-preciost <- read_excel("precios.xlsx", 2) # Este es el set de datos originales tiene algunos faltantes producto de Covid-19 y titulos muy largos
-precios <- read_excel("precios.xlsx", 1) # esta base es la misma que la anterior pero sacando los missings, cortando la muestra a los valores existentes y asignandole un indice a los titulos
+preciost <- read_excel("/Users/azulmakk/Desktop/Analitica Descriptiva/Clases/precios.xlsx", 2) # Este es el set de datos originales tiene algunos faltantes producto de Covid-19 y titulos muy largos
+precios <- read_excel("/Users/azulmakk/Desktop/Analitica Descriptiva/Clases/precios.xlsx", 1) # esta base es la misma que la anterior pero sacando los missings, cortando la muestra a los valores existentes y asignandole un indice a los titulos
 colnames(preciost)
 ```
 
@@ -399,7 +399,7 @@ corrplot(M, method = "ellipse")
 ## Ejercicios
 
 ```{r}
-Notas <- read_excel("Ejercicio.xlsx")
+Notas <- read_excel("/Users/azulmakk/Desktop/Analitica Descriptiva/Clases/Ejercicio.xlsx")
 head(Notas, 18)
 ```
 # 
