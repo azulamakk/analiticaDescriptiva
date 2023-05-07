@@ -126,11 +126,11 @@ promedioXCalidad <- acceso_info_publica %>% group_by(calidad_respuesta) %>% filt
 promedioXCalidad
 
 #2.5.3 Calidad de respuesta con menor tiempo de respuesta
-menorTiempoCalidad <- promedioXCalidadRespuesta %>% filter(promedio == min(promedio))
+menorTiempoCalidad <- promedioXCalidad %>% filter(promedio == min(promedio))
 menorTiempoCalidad
 
 #2.5.4 Calidad de respuesta con mayor tiempo de respuesta
-mayorTiempoCalidad <- promedioXCalidadRespuesta %>% filter(promedio == max(promedio))
+mayorTiempoCalidad <- promedioXCalidad %>% filter(promedio == max(promedio))
 mayorTiempoCalidad
 
 
@@ -192,7 +192,6 @@ propProrroga
 prorrogaXDependencia <- acceso_info_publica %>% group_by(dependencia) %>% filter(prorroga=='SI') %>% summarise(cantidad = n())
 combinacionDependencia <- merge(x = cantXDependencia, y = prorrogaXDependencia, by='dependencia')
 propCProrrogaDependencia <- combinacionDependencia %>% group_by(dependencia) %>% summarise(incumplimiento = cantidad.y / cantidad.x, cantTotal=cantidad.x) %>% arrange(-incumplimiento)
-propCProrrogaDependencia
 
 #3.2 Requirieron prorroga por tipo de solicitante
 prorrogaXTipoSolicitante <- acceso_info_publica %>% group_by(tipo_solicitante) %>% filter(prorroga=='SI') %>% summarise(cantidad = n())

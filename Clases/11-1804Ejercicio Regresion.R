@@ -82,4 +82,33 @@ predict(modelolin, newdata= nuevo)
 # Evaluo que tan bueno es nuestro ejercicio condicional con una matriz de confusion y comparo lo obtenido con el resultado no condicional
 # Reemplazo los valores faltantes por los predichos y los convierto en categorias
 
+dfprueba= dff[!is.na(dff$y),]
+# Crear id
+dfprueba$id <- 1:nrow(dftoprove)
+
+train <- dfprueba %>% sample_frac(0.70)
+test <- anti_join(dfprueba,train,by="id")
+
+# Sacar id
+train=train[,(names(train)!="id")]
+test=test[,(names(test)!="id")]
+
+# Crear modelo con train y aplicarlo en test
+
+modelolintrain=lm(y ~ x1 + x2 + z, train)
+summary(modelolintrain)
+test$pred=predict(object = modelolintrain,newdata = test)
+
+# Evaluarlo:
+
+# R2 -> 1 - (SRC/STC)
+
+r2 <- 1 - (sum((test$y-test$pred)^2)/sum((test$y-mean(test$y))^2))
+
+
+
+
+
+
+
 
