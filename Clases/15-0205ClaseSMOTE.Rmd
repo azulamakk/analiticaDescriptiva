@@ -1,0 +1,258 @@
+---
+title: "Untitled"
+author: "Lic. Gomez Aguirre"
+date: '2023-05-02'
+output: html_document
+---
+
+```{r,echo=FALSE}
+rm(list=ls())
+gc()
+setwd("C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/SMOTE")
+```
+
+### Que son y como trabajar con datos desbalanceados
+
+Se conoce como datos desbalanceados a una distribucion de clases drasticamente desporporcionada en donde una clase "Mayoritaria" ocurre con mas frecuencia que una clase "Minoritaria". La definicion de deastica hacer referencia a la condicion en donde se anulan las metricas tradicionalmente usadas.
+
+
+Esto, por ejemplo, ocurre en casos como la detección de fraudes con tarjetas de crédito, donde puede haber solo 1000 casos de fraude en más de un millón de transacciones, lo que representa un escaso 0,1% del conjunto de datos.
+
+![](48051918992_f0b8f3a76a_b.jpg)
+
+### El problema en las métricas del rendimiento de algoritmos en conjuntos de datos desbalanceados. 
+
+Si tenemos un conjunto de datos desequilibrado que contiene el 1% de una clase minoritaria y el 99% de la clase mayoritaria, un algoritmo puede predecir todos los casos como pertenecientes a la clase mayoritaria. La puntuación de precisión de este algoritmo arrojará una precisión del 99%, lo que parece impresionante, pero ¿es realmente así? La clase minoritaria es totalmente ignorada en este caso y esto puede resultar costoso en algunos problemas de clasificación, como el caso de un fraude con tarjetas de crédito, que puede costar a los individuos y empresas mucho dinero.
+
+
+## Inspeccionar Base de Datos:
+```{r, echo=FALSE}
+library(ggplot2)
+library(knitr)
+suppressMessages(library(dplyr))
+library(readr)
+```
+
+```{r, echo=FALSE}
+credit_card_data <-read_csv("C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/SMOTE/creditcard.csv")
+```
+
+```{r}
+credit_card_data$Class<-as.factor(credit_card_data$Class) # convert class to factor
+levels(credit_card_data$Class) <- c('Legitimate', 'Fraud') # names of factors
+summary(credit_card_data$Class)
+```
+```{r}
+prop.table(table(credit_card_data$Class))
+```
+
+
+```{r}
+options(scipen=10000) # remove scientific notation when viewing plot
+
+ggplot(data = credit_card_data, aes(fill = Class)) +
+    geom_bar(aes(x = Class))+
+    ggtitle("Number of samples in each class", subtitle = "Original dataset")+
+    xlab("")+
+    ylab("Samples")+
+    scale_y_continuous(expand = c(0,0))+
+    scale_x_discrete(expand = c(0,0))+
+    theme(legend.position = "none", 
+         legend.title = element_blank(),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank())
+```
+
+```{r}
+# scatter plot original dataset
+ggplot(data = credit_card_data, aes(x = V4, y = V7, colour = Class))+
+  geom_point()+
+    ggtitle("Original dataset")+
+    xlab("V4")+
+    ylab("V7")+
+    geom_point() +
+    xlim(-5, 15)+
+    ylim(-50, 50)+
+    theme(panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank(), 
+          legend.key=element_blank())
+```
+
+```{r}
+predictor_variables <- credit_card_data[,-31] # Select everything except response
+response_variable <- credit_card_data$Class   # Only select response variable
+```
+
+El caso minoritario debe tener el nivel de factor de 1, por defecto lo tiene codificado como 0.
+
+# swaps around the factor encoding for legitimate and fraud
+
+```{r}
+levels(response_variable) <- c('0', '1') 
+```
+
+# Que hacer???
+
+1- Recopilar más datos
+
+Parece una tontería, pero la recopilación de más datos casi siempre se pasa por alto. Verifica si es posible reunir más datos para el problema, un conjunto de datos más grande podría exponer una perspectiva diferente y quizás más equilibrada de las clases.
+
+2- Utilizar las métricas de evaluación correctas
+
+La aplicación de métricas de evaluación inapropiadas para el modelo generado utilizando datos desequilibrados puede ser peligrosa. Imagina que nuestros datos de entrenamiento estan desbalanceados (clase minoritaria 0.02%), si se usa la precisión para medir la bondad de un modelo, un modelo que clasifique todas las muestras de prueba en 0 tendrá una precisión excelente, 99,8%, pero obviamente, este modelo no nos proporcionará ninguna información valiosa.
+
+3- Undersampling o submuestreo
+
+El proceso de submuestreo cuenta el número de datos de la muestra minoritaria en el conjunto de datos, luego selecciona aleatoriamente el mismo número de la muestra mayoritaria. En nuestro caso, terminaríamos con 492 datos elegidos al azar y las 492 muestras fraudulentas originales. 
+
+Esto resultaría en una división de 50:50. 
+El gran inconveniente, es que solo usamos una fraccion del total de datos original.
+
+```{r}
+#sample(1:30,492,replace=F) 
+```
+
+4- El sobremuestreo se utiliza cuando la cantidad de datos recopilados es insuficiente. Una técnica popular de sobremuestreo es SMOTE (técnica de sobremuestreo de minorías sintéticas), que crea muestras sintéticas al muestrear aleatoriamente las características de las ocurrencias en la clase minoritaria.
+
+ADASYN (Muestreo Sintético Adaptativo): Se utiliza una distribución ponderada dependiendo de cada clase minoritaria según su grado de dificultad de aprendizaje. Se generan más observaciones sintéticas para algunas instancias de clases minoritarias que son más difíciles de aprender en comparación con otras.
+
+DB-SMOTE (SMOTE basado en la densidad): sobremuestrea la clase minoritaria en el límite de decisión y examina en exceso la región para mantener la tasa de detección de la clase mayoritaria. Es más probable que estos se clasifiquen erróneamente que los que se encuentran lejos de la frontera.
+
+
+# SMOTE
+
+En R, se usa la función SMOTE() del paquete “smotefamily” para generar las nuevas observaciones para la clase S y la clase P. 
+
+Los dos parámetros principales de la función son K y dup-size. 
+
+```{r}
+#install.packages("smotefamily")
+library(smotefamily)
+```
+
+
+El valor K es el número de vecinos más cercanos elegidos para cada caso objetivo en clases minoritarias, y el valor de tamaño duplicado es el número de veces que se duplica el tamaño de la clase minoritaria. 
+
+```{r}
+dup_size=284315/492
+dup_size
+```
+
+
+
+```{r}
+smote_result = SMOTE(predictor_variables,target = response_variable, K = 3, dup_size = 5)
+
+```
+
+```{r}
+oversampled = smote_result$data
+```
+
+```{r}
+str(oversampled)
+```
+
+```{r}
+options(scipen=10000) # remove scientific notation when viewing plot
+
+ggplot(data = oversampled, aes(fill = class)) +
+    geom_bar(aes(x = class))+
+    ggtitle("Number of samples in each class", subtitle = "Original dataset")+
+    xlab("")+
+    ylab("Samples")+
+    scale_y_continuous(expand = c(0,0))+
+    scale_x_discrete(expand = c(0,0))+
+    theme(legend.position = "none", 
+         legend.title = element_blank(),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank())
+```
+
+
+```{r}
+# scatter plot original dataset
+ggplot(data = oversampled, aes(x = V4, y = V7, colour = class))+
+  geom_point()+
+    ggtitle("Original dataset")+
+    xlab("V4")+
+    ylab("V7")+
+    geom_point() +
+    xlim(-5, 15)+
+    ylim(-50, 50)+
+    theme(panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank(), 
+          legend.key=element_blank())
+```
+
+
+
+
+
+
+```{r}
+TS2<- filter(oversampled, oversampled$class == 1)
+nrow(TS2)
+```
+
+```{r}
+prop.table(table(oversampled$class))
+```
+
+## ADASYN implementation
+
+#ADASYN Balanced
+```{r}
+ADASed <- ADAS(predictor_variables,response_variable,K = 3)
+ADASed <- ADASed$data  # extract only the balanced dataset
+ADASed$class <- as.factor(ADASed$class)
+```
+```{r}
+dim(ADASed)
+```
+
+```{r}
+# Get the count and proportion of each classes
+prop.table(table(ADASed$class))
+```
+
+```{r}
+# scatter plot original dataset
+ggplot(data = ADASed, aes(x = V4, y = V7, colour = class))+
+  geom_point()+
+    ggtitle("Original dataset")+
+    xlab("V4")+
+    ylab("V7")+
+    geom_point() +
+    xlim(-5, 15)+
+    ylim(-50, 50)+
+    theme(panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank(), 
+          legend.key=element_blank())
+```
+
+# DENSITY BASED SMOTE IMPLEMENTATION
+
+#Density based SMOTE
+```{r}
+DBSMOTed <- DBSMOTE(predictor_variables,response_variable)
+```
+
+```{r}
+DBSMOTed <- DBSMOTed$data # extract only the balanced dataset
+DBSMOTed$class <- as.factor(DBSMOTed$class)
+```
+
+```{r}
+head(DBSMOTed)
+```
+
+```{r}
+prop.table(table(DBSMOTed$class))
+```
+
