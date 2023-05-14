@@ -197,7 +197,7 @@ propCProrrogaDependencia <- combinacionDependencia %>% group_by(dependencia) %>%
 prorrogaXTipoSolicitante <- acceso_info_publica %>% group_by(tipo_solicitante) %>% filter(prorroga=='SI') %>% summarise(cantidad = n())
 combinacionTipoSolicitante <- merge(x = cantXTipoSolicitante, y = prorrogaXTipoSolicitante, by='tipo_solicitante')
 propCProrrogaTipoSolicitante <- combinacionTipoSolicitante %>% group_by(tipo_solicitante) %>% summarise(incumplimiento = cantidad.y / cantidad.x, cantTotal = cantidad.x) %>% arrange(-incumplimiento)
-propCProrrogaTipoSolicitante
+propCProrrogaTipoSolicitante %>% filter(tipo_solicitante == 'ALUMNOS DE PROGRAMA PARTICIPACION CIUDADANA')
 
 #3.3 Requirieron prorroga por dependencia de ministerio
 prorrogaXDependenciaMinisterio<- acceso_info_publica %>% group_by(dependencia_ministerio) %>% filter(prorroga=='SI') %>% summarise(cantidad = n())
