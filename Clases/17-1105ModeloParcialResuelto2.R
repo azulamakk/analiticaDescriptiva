@@ -1,8 +1,7 @@
 #De la base de datos "ds_salaries.csv"
 library(tidyverse)
 library(funModeling)
-setwd("~/Desktop/1Q 2023/Analítica Descriptiva/Parte 2/Practica Parcial")
-data <- read.csv('./archive/ds_salaries.csv')
+data <- read.csv("~/Desktop/BackupClases/ds_salaries.csv")
 
 # ------------------------------------------------------------------------------
 #1) Genere  interrogante que pueda ser contestado con esos datos que vincule:
@@ -20,15 +19,15 @@ data <- read.csv('./archive/ds_salaries.csv')
 #5.Interpretelo de forma coloquial y formal
 
 # A) Dos variables numéricas
-
-unique(data$employee_residence )
+shapiro.test(as.numeric(data$salary))
+unique(data$employee_residence)
 options(scipen = 999)
 reg <- data %>% group_by(employee_residence) %>%  summarise( n = n(),promedio = mean(salary)) 
 
 # Hipotesis coloquial: cuantos más residentes hay, mas alto es el salario promedio
 # Hipotesis formal: existe una correlación positiva entre la cantidad de residentes y el salario promedio
 # Gráfico 
-reg%>% ggplot(aes(x=n,y=promedio))+geom_point(color="coral")+scale_x_log10()+scale_y_log10()+geom_smooth(method="lm") # no hay indicios de que exista la correlación entre las variables
+reg%>% ggplot(aes(x=n,y=promedio))+geom_point(color="coral1")+scale_x_log10()+scale_y_log10()+geom_smooth(method="lm", color='coral3') # no hay indicios de que exista la correlación entre las variables
 # Test de correlación
 cor.test(log(reg$n),log(reg$promedio),method="spearman")
 # Interpretación coloquial: se puede decir que cuantos más residentes hay, más alto es el salario promedio, aunque esta relación no es muy fuerte.
@@ -110,7 +109,7 @@ media_eur <- mean(na.omit(data2$salary_in_usd[data2$salary_currency=="EUR"]))
 
 # B: OUTLIERS
 data %>% ggplot(aes(y=salary_in_usd))+
-  geom_boxplot(color="coral")+
+  geom_boxplot(color="darkslategray3", fill='deepskyblue4')+
   labs(y="Salario en USD")+
   ggtitle("Boxplot")
 # se ven valores atípicos 
@@ -122,7 +121,7 @@ hist(outliers_iqr)
 
 # Por Percentil 99:
 p99 <- quantile(na.omit(data$salary_in_usd), 0.99)
-outliers_p99 <- data$salary_in_usd[data$salary_in_usd > p99]
+outliers_p99 <- data$salary_in_usd[na.omit(data$salary_in_usd) > p99]
 length(outliers_p99) # 63 outliers detectados
 hist(outliers_p99)
 
@@ -169,6 +168,7 @@ for (i in 1:length(job$job_title)){
 library(smotefamily)
 
 data_completa <- data[complete.cases(data),]
+View(data_completa)
 data_completa$employment_type <- as.factor(data_completa$employment_type)
 data_completa['ft'] = as.factor(as.numeric(data_completa$employment_type == 'FT'))
 mean(as.numeric(as.character(data_completa$ft))) # 99% de FT
@@ -179,11 +179,7 @@ respuesta_variable <- as.numeric(data_completa$ft)   # Only select response vari
 # El caso minoritario debe tener el nivel de factor de 1, por defecto lo tiene codificado como 0.
 #levels(respuesta_variable) <- c('1', '0') 
 smoted_data <- SMOTE(predictoras_variables,target= as.numeric(respuesta_variable),K=3)
-
-
 oversampled = smoted_data$data # los nuevos datos creados
-
-
 
 #b) Comparar que las variables salary_in_usd,remote_ratio antes y despues del oversampling,
 #b.1) ?Tiene la misma media?

@@ -156,7 +156,6 @@ mm
 #
 
 ```{r}
-setwd("C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/8- relacion entre variables/8-b- Correlacion")
 ```
 
 

@@ -31,7 +31,7 @@ spoti %>% ggplot(aes(x=explicit, y = duration_ms))+geom_boxplot()
 spoti %>% ggplot(aes(fill=explicit, x = duration_ms))+geom_density(alpha = 0.4)
 #En el boxplot parece que la hipotesis se cumple, en el grafico de densidad no,
 #el test correspondiente es el de igualdad de medias "t-student"
-t.test(spoti[spoti$explicsit==T,]$duration_ms,spoti[spoti$explicit==F,]$duration_ms, alternative = 'greater')
+t.test(spoti[spoti$explicit==T,]$duration_ms,spoti[spoti$explicit==F,]$duration_ms, alternative = 'greater')
 #La H0: mean(duration_ms|explicit==T)<=mean(duration_ms|explicit==F)
 #La H1: mean(duration_ms|explicit==T)>mean(duration_ms|explicit==F)
 #Como el p-value es cercano a 0 (menor a .05), el test indica que, en promedio,
@@ -94,6 +94,7 @@ boxplot(spoti$minutes)
 
 #3) En la base de datos "znorte_properati.csv"
 znorte_properati = read.csv("~/Desktop/BackupClases/znorte_properati(1).csv")
+View(znorte_properati)
 #a) Repita el ejercicio 1) sobre esta base.
 #b) Estudie los missings y outliers de la variable "price_aprox_local_currency"
 #tip: tenga en cuenta su "conocimiento contextual" (?tipo de cambio implicito?)
@@ -105,7 +106,8 @@ mdet = glm(is.na(price_aprox_local_currency)~rooms+property_type+surface_in_m2, 
 mdet %>% summary()
 #Hay significatividad en "popularity" y "speechiness", se eliminan para la imputacion
 #Modelo de imputacion
-impmodel = lm(price_aprox_local_currency~rooms+property_type+surface_in_m2, data = znorte_properati[!is.na(znorte_properati$price_aprox_local_currency),])
+impmodel = lm(price_aprox_local_currency~rooms+property_type+surface_in_m2, 
+              data = znorte_properati[!is.na(znorte_properati$price_aprox_local_currency),])
 impmodel %>% summary()
 
 

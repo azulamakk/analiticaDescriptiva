@@ -5,11 +5,7 @@ date: '2023-05-02'
 output: html_document
 ---
 
-```{r,echo=FALSE}
-rm(list=ls())
-gc()
-setwd("C:/Users/HP/Desktop/Carpetas/ITBA/clase/Primer Q 2022/SMOTE")
-```
+
 
 ### Que son y como trabajar con datos desbalanceados
 
