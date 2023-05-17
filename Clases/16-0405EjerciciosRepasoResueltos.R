@@ -104,7 +104,6 @@ View(znorte_properati)
 #Los missings, ahora que es una variable numerica
 mdet = glm(is.na(price_aprox_local_currency)~rooms+property_type+surface_in_m2, data = znorte_properati, family='binomial')
 mdet %>% summary()
-#Hay significatividad en "popularity" y "speechiness", se eliminan para la imputacion
 #Modelo de imputacion
 impmodel = lm(price_aprox_local_currency~rooms+property_type+surface_in_m2, 
               data = znorte_properati[!is.na(znorte_properati$price_aprox_local_currency),])

@@ -35,7 +35,7 @@ cor.test(log(reg$n),log(reg$promedio),method="spearman")
 
 # B) Una categórica y una númerica
 
-# c1
+# b1
 hist(log(data$salary))
 regb <- data %>% select(salary,company_size)
 regb <- regb %>% mutate(Clase_salario = case_when(
@@ -57,7 +57,7 @@ chisq.test(table(regb$company_size,regb$Clase_salario))
 # Interpretación coloquial: se puede decir que el rango de salario es dependiente del tamaño de la empresa
 # Interpretación formal: el test es significativo por lo que rechazamos la independencia y hay evidencia para afirmar que las variables son dependientes.
 
-# c2
+# b2
 # Hipotesis coloquial: la dispersión de los salarios cambia de acuerdo al tamaño de la empresa
 # Hipotesis formal: las varianzas de los salarios son diferentes dependiendo del tamaño de la empresa
 # Gráfico
@@ -168,7 +168,6 @@ for (i in 1:length(job$job_title)){
 library(smotefamily)
 
 data_completa <- data[complete.cases(data),]
-View(data_completa)
 data_completa$employment_type <- as.factor(data_completa$employment_type)
 data_completa['ft'] = as.factor(as.numeric(data_completa$employment_type == 'FT'))
 mean(as.numeric(as.character(data_completa$ft))) # 99% de FT
