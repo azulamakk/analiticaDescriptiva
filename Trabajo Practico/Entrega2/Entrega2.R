@@ -11,13 +11,13 @@ tail(acceso_info_publica)
 colnames(acceso_info_publica)
 
 acceso_info_publica$fecha <- as.Date(acceso_info_publica$fecha,
-           format = "%d/%m/%Y")
-acceso_info_publica$vencimiento_1 <- as.Date(acceso_info_publica$vencimiento_1,
                                      format = "%d/%m/%Y")
+acceso_info_publica$vencimiento_1 <- as.Date(acceso_info_publica$vencimiento_1,
+                                             format = "%d/%m/%Y")
 acceso_info_publica$vencimiento_2 <- as.Date(acceso_info_publica$vencimiento_2,
                                              format = "%d/%m/%Y")
 acceso_info_publica$fecha_respuesta <- as.Date(acceso_info_publica$fecha_respuesta,
-                                             format = "%d/%m/%Y")
+                                               format = "%d/%m/%Y")
 sapply(acceso_info_publica, class)
 
 #1------ Analis exploratorio: Informacion preliminar
@@ -40,7 +40,7 @@ cantXDependencia
 
 #2.1.2 Promedio de tiempo de respuesta en funcion a dependencia, ordenado de mayor a menor
 promedioXdependencia <- acceso_info_publica %>% group_by(dependencia) %>% summarise(promedio = mean(tiempo_de_respuesta)) %>% 
-    filter(promedio != 'NA') %>% arrange(-promedio)
+  filter(promedio != 'NA') %>% arrange(-promedio)
 promedioXdependencia
 
 #2.1.3 Dependecia con menor tiempo de respuesta
@@ -59,7 +59,7 @@ cantXTipoSolicitante
 
 #2.2.2 Promedio de tiempo de respuesta en funcion a tipo de solicitante, ordenado de mayor a menor
 promedioXtipoSolicitante <- acceso_info_publica %>% filter(!is.na(tiempo_de_respuesta)) %>% group_by(solicitante = toupper(tipo_solicitante)) %>% 
-    summarise(promedio = mean(tiempo_de_respuesta)) %>% arrange(-promedio)
+  summarise(promedio = mean(tiempo_de_respuesta)) %>% arrange(-promedio)
 promedioXtipoSolicitante
 
 #2.2.3 Tipo de solicitante con menor tiempo de respuesta
@@ -75,7 +75,7 @@ mayorTiempoTipoSolicitante
 #2.3 Dependencia de ministerio
 #2.3.1 Cantidad de registros por dependencia de ministerio, ordenado de mayor a menor
 cantXDependenciaMinisterio <- acceso_info_publica %>% group_by(dependencia_ministerio) %>% summarise(cantidad = n()) %>% 
-    filter(dependencia_ministerio != 'NA') %>% arrange(-cantidad)
+  filter(dependencia_ministerio != 'NA') %>% arrange(-cantidad)
 cantXDependenciaMinisterio
 
 #2.3.2 Promedio de tiempo de respuesta en funcion a dependencia de ministerio, ordenado de mayor a menor
@@ -117,7 +117,7 @@ mayorTiempoMinisterio
 #2.5 Calidad respuesta
 #2.5.1 Cantidad de registros por calidad de respuesta, ordenado de mayor a menor
 cantXCalidadRespuesta <- acceso_info_publica %>% group_by(calidad_respuesta) %>% summarise(cantidad = n()) %>% 
-    filter(calidad_respuesta != 'NA') %>% arrange(-cantidad)
+  filter(calidad_respuesta != 'NA') %>% arrange(-cantidad)
 cantXCalidadRespuesta
 
 #2.5.2 Promedio de tiempo de respuesta en funcion a la calidad de respuesta, ordenado de mayor a menor
@@ -268,4 +268,58 @@ completitudCategoriaTemaEspecifico <- merge(x = cantXCatTemaEspecifico, y = comp
 propCCompletitudCategoriaTemaEspecifico<- completitudCategoriaTemaEspecifico %>% group_by(categoria_tema_especifico) %>% summarise(incumplimiento = cantidad.y / cantidad.x, cantTotal=cantidad.x) %>% arrange(-incumplimiento)
 propCCompletitudCategoriaTemaEspecifico
 
+
+#ENTREGA TP 2
+# 5-------- Analisis de tests
+
+categorias_unicas <- unique(acceso_info_publica$categoria_tema) #Se busca saber la cantidad de categorias que tenemos
+cantidad_categorias <- length(categorias_unicas)
+print(cantidad_categorias)
+
+
+dependencias <- unique(acceso_info_publica$dependencia)
+cantidad_dependencias <- length(dependencias)
+print(cantidad_dependencias)
+
+solicitantes <- unique(acceso_info_publica$tipo_solicitante)
+cantidad_solicitantes <- length(solicitantes)
+print(cantidad_solicitantes)
+
+dependencia_min <- unique(acceso_info_publica$dependencia_ministerio)
+cantidad_dep_min <- length(dependencia_min)
+print(cantidad_dep_min)
+
+
+ministerios <- unique(acceso_info_publica$ministerio)
+cantidad_ministerios <- length(ministerios)
+print(cantidad_ministerios)
+
+
+#5.1 Test de chi cuadrado entre tema y tiempo en responder
+tabla_contingencia <- table(acceso_info_publica$categoria_tema, acceso_info_publica$tiempo_de_respuesta)
+resultado_chi_cuadrado <- chisq.test(tabla_contingencia)
+print(resultado_chi_cuadrado)
+
+
+# 5.1.1 Categorizacion tiempo respuesta
+categorizacion_demora = acceso_info_publica %>% mutate(
+  categoria_demora=case_when(
+    tiempo_de_respuesta<quantile(acceso_info_publica$tiempo_de_respuesta,0.25,na.rm = TRUE)~"Optimo",
+    tiempo_de_respuesta<quantile(acceso_info_publica$tiempo_de_respuesta,0.50,na.rm = TRUE)~"Nomal",
+    tiempo_de_respuesta<quantile(acceso_info_publica$tiempo_de_respuesta,0.75,na.rm = TRUE)~"Demorado",
+    tiempo_de_respuesta>quantile(acceso_info_publica$tiempo_de_respuesta,0.75,na.rm = TRUE)~"Incumplimiento"
+))
+
+categorizacion_demora = categorizacion_demora %>% mutate(esCompleta = 
+                      case_when(calidad_respuesta=='COMPLETA'~TRUE,
+                       T~FALSE))
+View(categorizacion_demora)
+tabla_contingencia <- table(categorizacion_demora$categoria_tema, categorizacion_demora$categoria_demora)
+resultado_chi_cuadrado <- chisq.test(tabla_contingencia)
+print(resultado_chi_cuadrado)
+
+
+# 5.2. T student entre cantidad de pedidos por ministerio con incumplimiento temporal
+t.test(acceso_info_publica[acceso_info_publica$calidad_respuesta=='COMPLETA',]$tiempo_de_respuesta,
+       acceso_info_publica[acceso_info_publica$calidad_respuesta!='COMPLETA',]$tiempo_de_respuesta, alternative = 'greater', var.equal = FALSE)
 
