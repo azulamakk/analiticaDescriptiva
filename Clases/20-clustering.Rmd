@@ -1,0 +1,276 @@
+---
+title: "K MEANS-https:"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+#https://rpubs.com/kfhidalgoh/300948 y https://rpubs.com/Joaquin_AR/310338
+
+
+Ejemplo
+
+El set de datos USArrests contiene información sobre el número de delitos (asaltos, asesinatos y secuestros) junto con el porcentaje de población urbana para cada uno de los 50 estados de USA. Se pretende estudiar si existe una agrupación subyacente de los estados empleando K-means-clustering.
+
+
+```{r}
+rm(list=ls())
+gc()
+
+library (factoextra)
+library (ggplot2)
+data("USArrests")
+head(USArrests)
+datos <- scale(USArrests)
+datos<-as.data.frame(datos)
+library(cluster)
+set.seed(123)
+```
+
+
+
+```{r}
+my_data <- USArrests
+# Remove any missing value (i.e, NA values for not available)
+my_data <- na.omit(my_data)
+# Scale variables
+my_data <- scale(my_data)
+# View the firt 3 rows
+head(my_data, n = 4)
+```
+
+
+# Matriz de distancia
+
+Get_dist (): para calcular una matriz de distancia entre las filas de una matriz de datos. Comparado con la función dist () estándar, soporta medidas de distancia basadas en la correlación incluyendo los métodos “pearson”, “kendall” y “spearman”.
+
+tambien cuenta con medidas como: "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski".
+
+Fviz_dist (): para visualizar una matriz de distancia
+
+```{r}
+res.dist <- get_dist(USArrests, stand = TRUE, method = "pearson")
+fviz_dist(res.dist, 
+   gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+
+```
+0.3 particionando el cluster
+Los algoritmos de partición son enfoques de agrupamiento que dividen los conjuntos de datos, que contienen n observaciones, en un conjunto de k grupos (es decir, conglomerados). Los algoritmos requieren que el analista especifique el número de clústeres que se generarán.
+
+K-means clustering (macqueen, 1967), en el que, cada grupo está representado por el centro o los medias de los puntos de datos pertenecientes al grupo.
+
+Agrupación K-medoids o pam (partición alrededor de medoids, kaufman & rousseeuw, 1990), en el que, cada grupo está representado por uno de los objetos en el grupo. 
+
+Vamos a describir también una variante de pam llamado clara (agrupación de grandes aplicaciones) que se utiliza para analizar grandes conjuntos de datos.
+
+
+Cómo identificar la cantidad de clusters?
+Existen varios metodos
+
+
+gap(k)=(1/B)*sum(b=1 a B) del log(Wkb)−log(Wk)
+
+donde Wkb es la distancia intra cluster de B muetreos aleatorios y Wk es la varianza total intra cluster
+
+1- Elbow Method
+
+```{r}
+fviz_nbclust(my_data, kmeans, method = "wss")+geom_vline(xintercept = 4, linetype = 2)+
+labs(subtitle = "Elbow method")
+
+```
+
+Cómo identificar la cantidad de clusters?
+
+Una forma sencilla de estimar el número K óptimo de clusters cuando no se dispone de información adicional en la que basarse, es aplicar el algoritmo de K-means para un rango de valores de K e identificar aquel valor a partir del cual la reducción en la suma total de varianza intra-cluster deja de ser sustancial. A esta estrategia se la conoce como método del codo o elbow method (en los siguientes apartados se detallan otras opciones).
+
+
+
+
+```{r}
+fviz_nbclust(x = datos, FUNcluster = kmeans, method = "wss", k.max = 15, diss = get_dist(datos, method = "euclidean"), nstart = 50)
+```
+
+
+
+
+
+
+
+
+El paquete "NbClust" que proporciona 30 índices para determinar el mejor número de clusters
+
+Cómo identificar la cantidad de clusters?
+
+```{r}
+library("NbClust")
+set.seed(123)
+res.nbclust <- NbClust(my_data, distance = "euclidean",
+                  min.nc = 2, max.nc = 10, 
+                  method = "complete", index ="all") 
+```
+
+
+```{r}
+km.res <- kmeans(my_data, 4, nstart = 25)
+fviz_cluster(km.res, data = my_data, frame.type = "convex")
+```
+
+0.3.3 cluster PAM
+
+```{r}
+# Compute PAM
+library("cluster")
+pam.res <- pam(my_data, 4)
+# Visualize
+fviz_cluster(pam.res)
+```
+
+
+```{r}
+km_clusters <- kmeans(x = my_data, centers = 4, nstart = 50)
+
+```
+
+
+```{r}
+
+fviz_cluster(object = km_clusters, data = datos, show.clust.cent = TRUE,
+             ellipse.type = "euclid", star.plot = FALSE, repel = FALSE) +
+  labs(title = "Resultados clustering K-means") +
+  theme_bw() +
+
+    theme(legend.position = "none")
+
+```
+```{r}
+USArrests$cluster <- km_clusters$cluster
+```
+
+```{r}
+library(dplyr)
+
+USArrests$cluster <- km_clusters$cluster
+
+summ<-USArrests%>%
+  group_by(cluster)%>%
+    summarise(Murder = mean(Murder),
+              Assault = mean(Assault),
+              Urbanpop = mean(UrbanPop),
+              Rape = mean(Rape), n = n())
+
+
+summ$Murder <-as.integer(summ$Murder)
+summ$Assault <-as.integer(summ$Assault)
+summ$UrbanPop <-as.integer(summ$Urbanpop)
+summ$Rape <-as.integer(summ$Rape)
+
+
+summ
+```
+```{r}
+filter(USArrests,cluster==1)
+```
+
+DENDOGRAMA
+
+Es un tipo de representacion grafica o diagrama de datos en forma de arbol que organiza los datos en subcategorias que se van dividiendo en otros hasta llegar al nivel de detalle deseado (asemejandose a las ramas de un arbol que se van dividiendo en otras sucesivamente). 
+
+Este tipo de representacion permite apreciar claramente las relaciones de agrupacion entre los datos e incluso entre grupos de ellos aunque no las relaciones de similaridad o cercana entre categoras. 
+
+Observando las sucesivas subdivisiones podemos hacernos una idea sobre los criterios de agrupacion de los mismos, la distancia entre los datos segun las relaciones establecidas, etc. 
+
+Tambien podriamos referirnos al dendrograma como la ilustracin de las agrupaciones derivadas de la aplicacion de un algoritmo de clustering jerarquico
+
+
+
+
+```{r}
+matrizDistancias <- dist(datos)
+#Dendrogramas
+
+hc2008 <- hclust(matrizDistancias)
+# Construye la gráfica. Si no tiene la librearía instalada instale 'ggdendro'
+library(ggdendro)
+grafica <- ggdendrogram (hc2008, rotate=TRUE, size=2)
+grafica
+```
+```{r}
+# 1. Loading and preparing data
+data("USArrests")
+my_data <- scale(USArrests)
+# 2. Compute dissimilarity matrix
+d <- dist(my_data, method = "euclidean")
+# Hierarchical clustering using Ward's method
+res.hc <- hclust(d, method = "ward.D2" )
+# Cut tree into 4 groups
+grp <- cutree(res.hc, k = 4)
+# Visualize
+plot(res.hc, cex = 0.6) # plot tree
+rect.hclust(res.hc, k = 4, border = 2:5) # add rectangle
+```
+
+
+```{r}
+clarax <- clara(my_data, 4)
+# Cluster plot
+fviz_cluster(clarax, stand = T, geom = "point",
+             pointsize = 1)
+```
+```{r}
+plot(silhouette(clarax),  col = 2:3, main = "Silhouette plot") 
+#fviz_silhouette(clarax)
+```
+Algunos metodos de evaluacion de determinacion del numero de clusters
+
+El paquete "NbClust" un paquete que proporciona 30 índices para determinar el mejor número de clusters
+
+```{r}
+library("NbClust")
+set.seed(123)
+res.nbclust <- NbClust(my_data, distance = "euclidean",
+                  min.nc = 2, max.nc = 10, 
+                  method = "complete", index ="all") 
+```
+
+```{r}
+factoextra::fviz_nbclust(res.nbclust)
+```
+
+```{r}
+my_data <- scale(USArrests)
+# Compute clValid
+library("clValid")
+intern <- clValid(my_data, nClust = 2:6, 
+              clMethods = c("hierarchical","kmeans","pam",'clara'),
+              validation = "internal")
+# Summary
+summary(intern)
+```
+Recuerde que la conectividad debe ser minimizada, mientras tanto el índice de dunn y el ancho de la silueta debe ser maximizada.
+
+Por lo tanto, parece que la agrupación jerárquica supera a los otros algoritmos de agrupación en cada medida de validación, para casi cada número de clusters evaluados.
+
+Independientemente del algoritmo de agrupamiento, el número óptimo de grupos parece ser dos utilizando las tres medidas.
+
+
+```{r}
+plot(intern)
+```
+
+
+#https://rpubs.com/sgroszkiewicz/clustering
+
+```{r}
+data<- mpg
+head(data)
+mpg2008 <- subset(mpg,mpg$year == 2008)
+```
+
+```{r}
+library(fastDummies)
+data2<-dummy_cols(data, remove_selected_columns = TRUE)
+data2<-scale(data2)
+data2<-as.data.frame(data2)
+
+```
